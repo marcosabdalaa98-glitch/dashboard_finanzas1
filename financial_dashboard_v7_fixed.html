@@ -1,0 +1,2951 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <title>Dashboard Financiero v6</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" crossorigin="anonymous" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Space+Mono:wght@400;700&display=swap');
+
+    *, *::before, *::after { box-sizing: border-box; }
+    html, body { scroll-behavior: smooth; font-family: 'Inter', sans-serif; }
+
+    /* ── Scrollbar ── */
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: #020617; }
+    ::-webkit-scrollbar-thumb { background: #1e293b; border-radius: 999px; }
+    ::-webkit-scrollbar-thumb:hover { background: #10b981; }
+
+    /* ── Animations ── */
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(12px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes shimmer {
+      0%   { background-position: -200% center; }
+      100% { background-position: 200% center; }
+    }
+    @keyframes pulseGlow {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(16,185,129,0); }
+      50%       { box-shadow: 0 0 20px 4px rgba(16,185,129,0.15); }
+    }
+    @keyframes checkPop {
+      0%   { transform: translate(-50%,-50%) scale(0); }
+      60%  { transform: translate(-50%,-50%) scale(1.3); }
+      100% { transform: translate(-50%,-50%) scale(1); }
+    }
+
+    .animate-fade-in { animation: fadeIn 0.35s cubic-bezier(.4,0,.2,1) forwards; }
+
+    /* ── Glassmorphism card ── */
+    .glass-card {
+      background: rgba(15,23,42,0.7);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid rgba(255,255,255,0.06);
+    }
+    .glass-card-bright {
+      background: rgba(30,41,59,0.5);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid rgba(255,255,255,0.08);
+    }
+
+    /* ── Neon gradient borders ── */
+    .border-neon-emerald { border-color: rgba(16,185,129,0.35); }
+    .border-neon-cyan    { border-color: rgba(6,182,212,0.35); }
+    .border-neon-rose    { border-color: rgba(244,63,94,0.35); }
+    .border-neon-amber   { border-color: rgba(245,158,11,0.35); }
+    .border-neon-violet  { border-color: rgba(139,92,246,0.35); }
+
+    /* ── KPI glow effects ── */
+    .kpi-glow-emerald { box-shadow: 0 0 40px -10px rgba(16,185,129,0.3), inset 0 1px 0 rgba(255,255,255,0.05); }
+    .kpi-glow-rose    { box-shadow: 0 0 40px -10px rgba(244,63,94,0.3),  inset 0 1px 0 rgba(255,255,255,0.05); }
+    .kpi-glow-amber   { box-shadow: 0 0 40px -10px rgba(245,158,11,0.3), inset 0 1px 0 rgba(255,255,255,0.05); }
+    .kpi-glow-cyan    { box-shadow: 0 0 40px -10px rgba(6,182,212,0.3),  inset 0 1px 0 rgba(255,255,255,0.05); }
+    .kpi-glow-violet  { box-shadow: 0 0 40px -10px rgba(139,92,246,0.3), inset 0 1px 0 rgba(255,255,255,0.05); }
+
+    /* ── Custom checkbox ── */
+    .custom-checkbox {
+      appearance: none; -webkit-appearance: none;
+      width: 1.2rem; height: 1.2rem;
+      border: 2px solid #334155; border-radius: 0.375rem;
+      cursor: pointer; position: relative;
+      transition: all 0.2s cubic-bezier(.4,0,.2,1);
+      background: rgba(2,6,23,0.6);
+    }
+    .custom-checkbox:hover { border-color: #10b981; box-shadow: 0 0 8px rgba(16,185,129,0.3); }
+    .custom-checkbox:checked {
+      background: linear-gradient(135deg, #10b981, #06b6d4);
+      border-color: transparent;
+      animation: pulseGlow 0.6s ease-out;
+    }
+    .custom-checkbox:checked::after {
+      content: '\2713'; position: absolute; top: 50%; left: 50%;
+      transform: translate(-50%, -50%); color: white;
+      font-size: 0.75rem; font-weight: 700;
+      animation: checkPop 0.2s ease-out forwards;
+    }
+
+    /* ── Buttons micro-interactions ── */
+    .btn-primary {
+      display: inline-flex; align-items: center; gap: 0.5rem;
+      padding: 0.4rem 1rem; border-radius: 999px;
+      font-size: 0.75rem; font-weight: 600;
+      background: linear-gradient(135deg, #10b981, #06b6d4);
+      color: #020617; border: none; cursor: pointer;
+      transition: all 0.2s cubic-bezier(.4,0,.2,1);
+      box-shadow: 0 4px 14px rgba(16,185,129,0.3);
+    }
+    .btn-primary:hover { transform: translateY(-1px) scale(1.02); box-shadow: 0 6px 20px rgba(16,185,129,0.45); }
+    .btn-primary:active { transform: translateY(0) scale(0.98); }
+
+    .btn-ghost {
+      display: inline-flex; align-items: center; gap: 0.4rem;
+      padding: 0.35rem 0.75rem; border-radius: 0.5rem;
+      font-size: 0.75rem; font-weight: 500;
+      background: rgba(30,41,59,0.6); color: #94a3b8;
+      border: 1px solid rgba(71,85,105,0.4); cursor: pointer;
+      transition: all 0.15s ease;
+    }
+    .btn-ghost:hover { background: rgba(51,65,85,0.8); color: #e2e8f0; border-color: rgba(100,116,139,0.5); }
+
+    /* ── Table rows ── */
+    .tx-row {
+      transition: background 0.15s ease;
+      position: relative;
+    }
+    .tx-row:hover { background: rgba(30,41,59,0.6); }
+    .tx-row:hover td:first-child::before {
+      content: ''; position: absolute; left: 0; top: 0; bottom: 0;
+      width: 2px; background: linear-gradient(to bottom, #10b981, #06b6d4);
+      border-radius: 0 2px 2px 0;
+    }
+
+    /* ── Section title gradient ── */
+    .section-title {
+      background: linear-gradient(90deg, #e2e8f0, #94a3b8);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+    }
+    .section-title-neon {
+      background: linear-gradient(90deg, #10b981, #06b6d4);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+    }
+
+    /* ── Month pill ── */
+    .month-pill {
+      transition: all 0.2s cubic-bezier(.4,0,.2,1);
+    }
+    .month-pill.active {
+      background: linear-gradient(135deg, #10b981, #06b6d4);
+      color: #020617; font-weight: 700;
+      box-shadow: 0 0 12px rgba(16,185,129,0.4);
+    }
+    .month-pill:not(.active):hover {
+      border-color: rgba(16,185,129,0.5);
+      color: #10b981;
+      box-shadow: 0 0 8px rgba(16,185,129,0.15);
+    }
+
+    /* ── Modal backdrop ── */
+    .modal-backdrop { backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); }
+
+    /* ── Input focus ── */
+    input:focus, select:focus, textarea:focus {
+      outline: none;
+      border-color: rgba(16,185,129,0.6) !important;
+      box-shadow: 0 0 0 3px rgba(16,185,129,0.1);
+    }
+
+    /* ── Tag item ── */
+    .tag-item { transition: all 0.15s ease; }
+    .tag-item:hover { transform: translateY(-2px); filter: brightness(1.15); }
+
+    /* ── Neon divider ── */
+    .neon-divider {
+      height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(16,185,129,0.3), rgba(6,182,212,0.3), transparent);
+    }
+
+    /* ── Commitment paid row ── */
+    .commitment-paid {
+      background: rgba(16,185,129,0.06);
+      position: relative;
+    }
+    .commitment-paid::before {
+      content: ''; position: absolute; left: 0; top: 0; bottom: 0;
+      width: 3px; background: linear-gradient(to bottom, #10b981, #06b6d4);
+    }
+  </style>
+</head>
+<body class="bg-slate-950 text-slate-100 antialiased">
+<div class="min-h-screen flex flex-col">
+
+  <!-- ===== HEADER ===== -->
+  <header class="sticky top-0 z-30 glass-card border-b border-neon-emerald">
+    <!-- Subtle noise texture overlay -->
+    <div class="absolute inset-0 opacity-[0.03] pointer-events-none" style="background-image:url('data:image/svg+xml,%3Csvg viewBox=%220 0 256 256%22 xmlns=%22http://www.w3.org/2000/svg%22%3E%3Cfilter id=%22noise%22%3E%3CfeTurbulence type=%22fractalNoise%22 baseFrequency=%220.9%22 numOctaves=%224%22 stitchTiles=%22stitch%22/%3E%3C/filter%3E%3Crect width=%22100%25%22 height=%22100%25%22 filter=%22url(%23noise)%22/%3E%3C/svg%3E');"></div>
+
+    <div class="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3.5">
+      <div class="flex items-center justify-between gap-4">
+        <div class="flex items-center gap-3">
+          <div class="h-10 w-10 rounded-2xl flex items-center justify-center shadow-lg relative"
+               style="background:linear-gradient(135deg,#10b981,#06b6d4); box-shadow:0 0 20px rgba(16,185,129,0.4)">
+            <i class="fa-solid fa-chart-line text-slate-950 text-sm"></i>
+          </div>
+          <div>
+            <h1 class="text-lg sm:text-xl font-semibold tracking-tight text-slate-100">Dashboard Financiero</h1>
+            <p id="headerPeriodLabel" class="text-xs font-medium" style="background:linear-gradient(90deg,#10b981,#06b6d4);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;">Ejercicio: cargando...</p>
+          </div>
+        </div>
+        <button onclick="openModal('income')" class="btn-primary text-xs sm:text-sm">
+          <i class="fa-solid fa-plus text-[11px]"></i>
+          <span class="hidden sm:inline">Nuevo movimiento</span>
+          <span class="sm:hidden">Nuevo</span>
+        </button>
+      </div>
+
+      <!-- Selector de Mes -->
+      <div class="mt-3 flex items-center gap-2 flex-wrap">
+        <span class="text-[11px] text-slate-500 font-medium uppercase tracking-wide">
+          <i class="fa-solid fa-calendar-days mr-1"></i>Ejercicio:
+        </span>
+        <div id="monthSelectorBar" class="flex gap-1.5 flex-wrap"></div>
+        <button onclick="openNewMonthModal()" class="btn-ghost text-[11px] py-1 px-2.5 ml-1">
+          <i class="fa-solid fa-plus text-[10px]"></i>Nuevo mes
+        </button>
+      </div>
+
+      <!-- Filtros y Exportación -->
+      <div class="flex flex-wrap gap-1.5 mt-3 items-center">
+        <div class="flex items-center gap-1.5 glass-card-bright rounded-lg px-2 py-1">
+          <input id="filterFrom" type="date" class="bg-transparent px-2 py-1 text-slate-200 text-xs border border-slate-700 rounded-lg focus:border-emerald-500 transition w-32">
+          <span class="text-slate-600 text-xs">→</span>
+          <input id="filterTo" type="date" class="bg-transparent px-2 py-1 text-slate-200 text-xs border border-slate-700 rounded-lg focus:border-emerald-500 transition w-32">
+        </div>
+        <button onclick="applyDateFilter()" class="btn-ghost text-xs">
+          <i class="fa-solid fa-filter text-emerald-400"></i>Filtrar
+        </button>
+        <button onclick="clearDateFilter()" class="btn-ghost text-xs">
+          <i class="fa-solid fa-eraser"></i>Limpiar
+        </button>
+        <div class="ml-auto flex gap-1.5 flex-wrap">
+          <button onclick="exportFullBackup()" class="btn-ghost text-xs" title="Reporte PDF">
+            <i class="fa-solid fa-file-pdf text-rose-400"></i><span class="hidden sm:inline">PDF</span>
+          </button>
+          <button onclick="openMigrationModal()" class="btn-ghost text-xs">
+            <i class="fa-solid fa-database text-cyan-400"></i><span class="hidden sm:inline">Importar</span>
+          </button>
+          <button onclick="exportCSV()" class="btn-ghost text-xs">
+            <i class="fa-solid fa-file-csv text-emerald-400"></i>CSV
+          </button>
+          <button onclick="exportExcel()" class="btn-ghost text-xs">
+            <i class="fa-solid fa-file-excel text-green-400"></i>Excel
+          </button>
+          <button onclick="confirmResetDashboard()" class="btn-ghost text-xs border-rose-500/30 text-rose-400 hover:bg-rose-500/10">
+            <i class="fa-solid fa-trash-can"></i><span class="hidden sm:inline">Reset</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main class="flex-1">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 space-y-6">
+
+      <!-- ── KPIs ── -->
+      <section class="grid gap-4 sm:gap-5 grid-cols-2 xl:grid-cols-5">
+
+        <!-- Saldo Actual -->
+        <article class="relative overflow-hidden rounded-2xl glass-card border-neon-emerald kpi-glow-emerald p-4 sm:p-5 animate-fade-in col-span-2 xl:col-span-1"
+                 style="animation-delay:0s">
+          <div class="absolute -right-8 -top-8 h-28 w-28 rounded-full opacity-20 pointer-events-none"
+               style="background:radial-gradient(circle,#10b981,transparent 70%)"></div>
+          <div class="relative flex items-start justify-between gap-2">
+            <div class="min-w-0">
+              <p class="text-[10px] uppercase tracking-widest text-slate-500 font-semibold">Saldo Actual</p>
+              <p id="kpiBalance" class="mt-1.5 text-2xl sm:text-3xl font-bold tracking-tight font-mono truncate">$0</p>
+            </div>
+            <div class="h-9 w-9 shrink-0 rounded-xl flex items-center justify-center"
+                 style="background:rgba(16,185,129,0.15);border:1px solid rgba(16,185,129,0.25)">
+              <i class="fa-solid fa-wallet text-emerald-400 text-sm"></i>
+            </div>
+          </div>
+        </article>
+
+        <!-- Ingresos -->
+        <article class="relative overflow-hidden rounded-2xl glass-card border-neon-cyan p-4 sm:p-5 animate-fade-in"
+                 style="animation-delay:0.07s">
+          <div class="absolute -right-6 -top-6 h-24 w-24 rounded-full opacity-15 pointer-events-none"
+               style="background:radial-gradient(circle,#06b6d4,transparent 70%)"></div>
+          <div class="relative flex items-start justify-between gap-2">
+            <div class="min-w-0">
+              <p class="text-[10px] uppercase tracking-widest text-slate-500 font-semibold">Ingresos</p>
+              <p id="kpiIngresos" class="mt-1.5 text-xl sm:text-2xl font-bold tracking-tight text-cyan-300 font-mono truncate">$0</p>
+            </div>
+            <div class="h-9 w-9 shrink-0 rounded-xl flex items-center justify-center"
+                 style="background:rgba(6,182,212,0.15);border:1px solid rgba(6,182,212,0.25)">
+              <i class="fa-solid fa-circle-arrow-up text-cyan-400 text-sm"></i>
+            </div>
+          </div>
+        </article>
+
+        <!-- Gastos -->
+        <article class="relative overflow-hidden rounded-2xl glass-card border-neon-rose p-4 sm:p-5 animate-fade-in"
+                 style="animation-delay:0.14s">
+          <div class="absolute -right-6 -top-6 h-24 w-24 rounded-full opacity-15 pointer-events-none"
+               style="background:radial-gradient(circle,#f43f5e,transparent 70%)"></div>
+          <div class="relative flex items-start justify-between gap-2">
+            <div class="min-w-0">
+              <p class="text-[10px] uppercase tracking-widest text-slate-500 font-semibold">Gastos</p>
+              <p id="kpiGastos" class="mt-1.5 text-xl sm:text-2xl font-bold tracking-tight text-rose-400 font-mono truncate">$0</p>
+            </div>
+            <div class="h-9 w-9 shrink-0 rounded-xl flex items-center justify-center"
+                 style="background:rgba(244,63,94,0.15);border:1px solid rgba(244,63,94,0.25)">
+              <i class="fa-solid fa-circle-arrow-down text-rose-400 text-sm"></i>
+            </div>
+          </div>
+        </article>
+
+        <!-- Deuda -->
+        <article class="relative overflow-hidden rounded-2xl glass-card border-neon-amber p-4 sm:p-5 animate-fade-in"
+                 style="animation-delay:0.21s">
+          <div class="absolute -right-6 -top-6 h-24 w-24 rounded-full opacity-15 pointer-events-none"
+               style="background:radial-gradient(circle,#f59e0b,transparent 70%)"></div>
+          <div class="relative flex items-start justify-between gap-2">
+            <div class="min-w-0">
+              <p class="text-[10px] uppercase tracking-widest text-slate-500 font-semibold">Deuda Total</p>
+              <p id="kpiDeuda" class="mt-1.5 text-xl sm:text-2xl font-bold tracking-tight text-amber-400 font-mono truncate">$0</p>
+            </div>
+            <div class="h-9 w-9 shrink-0 rounded-xl flex items-center justify-center"
+                 style="background:rgba(245,158,11,0.15);border:1px solid rgba(245,158,11,0.25)">
+              <i class="fa-solid fa-scale-unbalanced text-amber-400 text-sm"></i>
+            </div>
+          </div>
+        </article>
+
+        <!-- Pendientes -->
+        <article class="relative overflow-hidden rounded-2xl glass-card border-neon-violet p-4 sm:p-5 animate-fade-in"
+                 style="animation-delay:0.28s">
+          <div class="absolute -right-6 -top-6 h-24 w-24 rounded-full opacity-15 pointer-events-none"
+               style="background:radial-gradient(circle,#8b5cf6,transparent 70%)"></div>
+          <div class="relative flex items-start justify-between gap-2">
+            <div class="min-w-0">
+              <p class="text-[10px] uppercase tracking-widest text-slate-500 font-semibold">Comp. Pendientes</p>
+              <p id="kpiIngresosPendientes" class="mt-1.5 text-xl sm:text-2xl font-bold tracking-tight text-violet-400 font-mono truncate">$0</p>
+            </div>
+            <div class="h-9 w-9 shrink-0 rounded-xl flex items-center justify-center"
+                 style="background:rgba(139,92,246,0.15);border:1px solid rgba(139,92,246,0.25)">
+              <i class="fa-solid fa-clock text-violet-400 text-sm"></i>
+            </div>
+          </div>
+        </article>
+      </section>
+
+      <!-- ── Charts ── -->
+      <section class="grid gap-5 lg:grid-cols-3">
+        <article class="rounded-2xl glass-card border-neon-emerald p-4 sm:p-5 flex flex-col shadow-xl animate-fade-in" style="animation-delay:0.3s">
+          <h2 class="text-sm font-semibold mb-4 section-title">Distribución por Categoría</h2>
+          <div class="flex-1 flex items-center justify-center min-h-52">
+            <canvas id="distributionChart" class="max-h-64"></canvas>
+          </div>
+        </article>
+        <article class="rounded-2xl glass-card border-neon-cyan p-4 sm:p-5 flex flex-col shadow-xl animate-fade-in" style="animation-delay:0.37s">
+          <h2 class="text-sm font-semibold mb-4 section-title">Comparativa General</h2>
+          <div class="flex-1 flex items-center justify-center min-h-52">
+            <canvas id="overviewChart" class="max-h-64"></canvas>
+          </div>
+        </article>
+        <article class="rounded-2xl glass-card border-neon-amber p-4 sm:p-5 flex flex-col shadow-xl animate-fade-in" style="animation-delay:0.44s">
+          <div class="flex items-center justify-between mb-4">
+            <h2 class="text-sm font-semibold section-title">Deuda Histórica</h2>
+            <div class="flex gap-2">
+              <button onclick="openDebtTagsModal()" class="text-[11px] text-cyan-400 hover:text-cyan-300 transition flex items-center gap-1">
+                <i class="fa-solid fa-tags"></i>Etiquetas
+              </button>
+              <button onclick="openDebtModal()" class="text-[11px] text-emerald-400 hover:text-emerald-300 transition flex items-center gap-1">
+                <i class="fa-solid fa-plus"></i>Agregar
+              </button>
+            </div>
+          </div>
+          <div class="flex-1 flex items-center justify-center min-h-36">
+            <canvas id="debtChart" class="max-h-52"></canvas>
+          </div>
+          <div id="debtLegend" class="mb-3 text-xs text-slate-500 text-center"></div>
+          <div class="neon-divider mb-3"></div>
+          <div class="overflow-x-auto -mx-4 sm:mx-0">
+            <table class="min-w-full text-xs">
+              <thead>
+                <tr class="text-slate-500 text-[10px] uppercase tracking-wide">
+                  <th class="text-left px-4 py-2 font-semibold">Concepto</th>
+                  <th class="text-left px-4 py-2 font-semibold">Etiq.</th>
+                  <th class="text-right px-4 py-2 font-semibold">Total</th>
+                  <th class="text-right px-4 py-2 font-semibold">Gastado</th>
+                  <th class="text-right px-4 py-2 font-semibold">Restante</th>
+                  <th class="text-center px-4 py-2 font-semibold w-12">⚙</th>
+                </tr>
+              </thead>
+              <tbody id="debtTableBody" class="divide-y divide-slate-800/50"></tbody>
+            </table>
+          </div>
+        </article>
+      </section>
+
+      <!-- ── Etiquetas ── -->
+      <section class="rounded-2xl glass-card border-neon-cyan p-4 sm:p-5 shadow-xl animate-fade-in" style="animation-delay:0.5s">
+        <div class="flex items-center justify-between mb-4">
+          <div>
+            <h2 class="text-sm font-semibold section-title-neon">Etiquetas de Deuda</h2>
+            <p class="text-[11px] text-slate-500 mt-0.5">Las transacciones con estas etiquetas actualizarán el gráfico de deuda automáticamente</p>
+          </div>
+          <button onclick="openTagManagerModal()"
+                  class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold text-slate-950 transition"
+                  style="background:linear-gradient(135deg,#06b6d4,#3b82f6);box-shadow:0 4px 12px rgba(6,182,212,0.3)">
+            <i class="fa-solid fa-gear text-[10px]"></i>Gestionar
+          </button>
+        </div>
+        <div id="tagsContainer" class="flex flex-wrap gap-2"></div>
+      </section>
+
+      <!-- ── Ingresos Esperados ── -->
+      <section class="rounded-2xl glass-card border-neon-cyan p-4 sm:p-5 shadow-xl animate-fade-in" style="animation-delay:0.55s">
+        <div class="flex items-center justify-between mb-4">
+          <div>
+            <h2 class="text-sm font-semibold section-title">Ingresos Esperados</h2>
+            <p class="text-[11px] text-slate-500 mt-0.5">Marca como recibidos para sumar al total de ingresos</p>
+          </div>
+          <button onclick="openIncomeExpectedModal()"
+                  class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold text-slate-950 transition"
+                  style="background:linear-gradient(135deg,#06b6d4,#3b82f6);box-shadow:0 4px 12px rgba(6,182,212,0.25)">
+            <i class="fa-solid fa-plus text-[10px]"></i>Agregar
+          </button>
+        </div>
+        <div class="overflow-x-auto -mx-4 sm:mx-0">
+          <table class="min-w-full text-xs sm:text-sm">
+            <thead>
+              <tr class="text-slate-500 text-[10px] uppercase tracking-wide border-b border-slate-800/80">
+                <th class="text-left px-4 py-2.5 font-semibold">Fuente</th>
+                <th class="text-left px-4 py-2.5 font-semibold">Concepto</th>
+                <th class="text-right px-4 py-2.5 font-semibold">Monto</th>
+                <th class="text-left px-4 py-2.5 font-semibold">Fecha</th>
+                <th class="text-left px-4 py-2.5 font-semibold">Observaciones</th>
+                <th class="text-center px-4 py-2.5 font-semibold w-16">Recibido</th>
+                <th class="text-center px-4 py-2.5 font-semibold w-16">Acciones</th>
+              </tr>
+            </thead>
+            <tbody id="incomeExpectedBody" class="divide-y divide-slate-800/50"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- ── Compromisos del Mes ── -->
+      <section class="rounded-2xl glass-card border-neon-rose p-4 sm:p-5 shadow-xl animate-fade-in" style="animation-delay:0.6s">
+        <div class="flex items-center justify-between mb-4">
+          <div>
+            <h2 class="text-sm font-semibold section-title">Compromisos del Mes <span class="text-rose-400/70">(Gastos)</span></h2>
+            <p class="text-[11px] text-slate-500 mt-0.5">Marca como pagados — generarán automáticamente un movimiento de gasto</p>
+          </div>
+          <button onclick="openCommitmentModal()"
+                  class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold text-slate-950 transition"
+                  style="background:linear-gradient(135deg,#f43f5e,#f59e0b);box-shadow:0 4px 12px rgba(244,63,94,0.25)">
+            <i class="fa-solid fa-plus text-[10px]"></i>Agregar
+          </button>
+        </div>
+        <div class="overflow-x-auto -mx-4 sm:mx-0">
+          <table class="min-w-full text-xs sm:text-sm">
+            <thead>
+              <tr class="text-slate-500 text-[10px] uppercase tracking-wide border-b border-slate-800/80">
+                <th class="text-left px-4 py-2.5 font-semibold">Proveedor</th>
+                <th class="text-left px-4 py-2.5 font-semibold">Concepto</th>
+                <th class="text-left px-4 py-2.5 font-semibold">Etiquetas</th>
+                <th class="text-right px-4 py-2.5 font-semibold">Monto</th>
+                <th class="text-left px-4 py-2.5 font-semibold">Fecha Vto</th>
+                <th class="text-left px-4 py-2.5 font-semibold">Observaciones</th>
+                <th class="text-center px-4 py-2.5 font-semibold w-16">Pagado</th>
+                <th class="text-center px-4 py-2.5 font-semibold w-16">Acciones</th>
+              </tr>
+            </thead>
+            <tbody id="commitmentsBody" class="divide-y divide-slate-800/50"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- ── Movimientos ── -->
+      <section class="rounded-2xl glass-card border border-slate-800/60 p-4 sm:p-5 shadow-xl animate-fade-in" style="animation-delay:0.65s">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
+          <div>
+            <h2 class="text-sm font-semibold section-title">Movimientos</h2>
+            <p class="text-[11px] text-slate-500 mt-0.5">Registro completo de ingresos y gastos del ejercicio activo</p>
+          </div>
+          <div class="flex gap-2">
+            <div class="relative">
+              <span class="absolute inset-y-0 left-2.5 flex items-center pointer-events-none text-slate-600">
+                <i class="fa-solid fa-magnifying-glass text-xs"></i>
+              </span>
+              <input id="searchInput" type="text" placeholder="Buscar..."
+                     class="pl-7 pr-3 py-1.5 rounded-full bg-slate-900/70 border border-slate-700 text-xs text-slate-100 transition w-40" />
+            </div>
+            <select id="filterCategory" onchange="updateTransactionTable()"
+                    class="px-3 py-1.5 rounded-full bg-slate-900/70 border border-slate-700 text-xs text-slate-200 transition">
+              <option value="">Todas</option>
+              <option value="income">Ingresos</option>
+              <option value="fixed">Gastos Fijos</option>
+              <option value="variable">Gastos Variables</option>
+            </select>
+          </div>
+        </div>
+        <div class="overflow-x-auto -mx-4 sm:mx-0">
+          <table class="min-w-full text-xs sm:text-sm">
+            <thead>
+              <tr class="text-slate-500 text-[10px] uppercase tracking-wide border-b border-slate-800/80">
+                <th class="text-left px-4 py-2.5 font-semibold cursor-pointer hover:text-emerald-400 transition"
+                    onclick="sortTransactions('date')">
+                  Fecha <i class="fa-solid fa-sort text-[9px] ml-0.5"></i>
+                </th>
+                <th class="text-left px-4 py-2.5 font-semibold">Categoría</th>
+                <th class="text-left px-4 py-2.5 font-semibold">Etiquetas</th>
+                <th class="text-left px-4 py-2.5 font-semibold">Descripción</th>
+                <th class="text-right px-4 py-2.5 font-semibold">Monto</th>
+                <th class="text-center px-4 py-2.5 font-semibold w-24">Acciones</th>
+              </tr>
+            </thead>
+            <tbody id="transactionsBody" class="divide-y divide-slate-800/50"></tbody>
+          </table>
+        </div>
+      </section>
+
+    </div>
+  </main>
+</div>
+
+<!-- ============================================================ -->
+<!-- MODALES                                                       -->
+<!-- ============================================================ -->
+
+<!-- Modal: Movimiento -->
+<div id="transactionModal" class="fixed inset-0 z-40 hidden items-center justify-center bg-slate-950/80 modal-backdrop">
+  <div class="absolute inset-0" onclick="closeModal()"></div>
+  <div class="relative z-50 w-full max-w-md mx-4 rounded-2xl glass-card border-neon-emerald shadow-2xl p-5 sm:p-6 animate-fade-in">
+    <div class="flex items-start justify-between gap-3 mb-5">
+      <h3 id="modalTitle" class="text-base font-semibold section-title-neon">Nuevo movimiento</h3>
+      <button onclick="closeModal()" class="text-slate-500 hover:text-slate-200 transition h-6 w-6 flex items-center justify-center rounded-full hover:bg-slate-700">
+        <i class="fa-solid fa-xmark text-sm"></i>
+      </button>
+    </div>
+    <form id="transactionForm" class="space-y-4">
+      <input type="hidden" id="editId" />
+      <div class="grid grid-cols-2 gap-3">
+        <div>
+          <label class="block text-[11px] font-semibold text-slate-400 mb-1.5 uppercase tracking-wide">Categoría</label>
+          <select id="category" class="w-full rounded-xl bg-slate-900/80 border border-slate-700 text-xs px-3 py-2 text-slate-100 transition" onchange="onCategoryChange()">
+            <option value="income">Ingresos</option>
+            <option value="fixed">Gastos Fijos</option>
+            <option value="variable">Gastos Variables</option>
+          </select>
+        </div>
+        <div>
+          <label class="block text-[11px] font-semibold text-slate-400 mb-1.5 uppercase tracking-wide">Fecha</label>
+          <input id="date" type="date" class="w-full rounded-xl bg-slate-900/80 border border-slate-700 text-xs px-3 py-2 text-slate-100 transition" required />
+        </div>
+      </div>
+      <div>
+        <label class="block text-[11px] font-semibold text-slate-400 mb-1.5 uppercase tracking-wide">Descripción</label>
+        <input id="description" type="text" placeholder="Ej: Sueldo, Renta..." class="w-full rounded-xl bg-slate-900/80 border border-slate-700 text-xs px-3 py-2 text-slate-100 transition" required />
+      </div>
+      <div>
+        <label class="block text-[11px] font-semibold text-slate-400 mb-1.5 uppercase tracking-wide">Monto</label>
+        <div class="relative">
+          <span class="absolute inset-y-0 left-3 flex items-center pointer-events-none text-slate-500 text-xs font-mono">$</span>
+          <input id="amount" type="number" step="0.01" min="0" placeholder="0.00"
+                 class="w-full rounded-xl bg-slate-900/80 border border-slate-700 text-xs pl-6 pr-3 py-2 text-slate-100 font-mono transition" required />
+        </div>
+      </div>
+      <div>
+        <label class="block text-[11px] font-semibold text-slate-400 mb-1.5 uppercase tracking-wide">Etiquetas <span class="normal-case font-normal text-slate-600">(opcional)</span></label>
+        <div id="tagSelector" class="flex flex-wrap gap-1.5 max-h-24 overflow-y-auto p-2 bg-slate-900/60 rounded-xl border border-slate-700/60"></div>
+        <p class="text-[10px] text-slate-600 mt-1">Vincula etiquetas para actualizar deudas históricas</p>
+      </div>
+      <div class="pt-1 flex justify-end gap-2">
+        <button type="button" onclick="closeModal()" class="btn-ghost text-xs">Cancelar</button>
+        <button type="submit" class="btn-primary text-xs">Guardar</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Modal: Compromiso -->
+<div id="commitmentModal" class="fixed inset-0 z-40 hidden items-center justify-center bg-slate-950/80 modal-backdrop">
+  <div class="absolute inset-0" onclick="closeCommitmentModal()"></div>
+  <div class="relative z-50 w-full max-w-md mx-4 rounded-2xl glass-card border-neon-rose shadow-2xl p-5 sm:p-6 animate-fade-in">
+    <div class="flex items-start justify-between gap-3 mb-5">
+      <h3 id="commitmentModalTitle" class="text-base font-semibold" style="background:linear-gradient(90deg,#f43f5e,#f59e0b);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;">Nuevo Compromiso</h3>
+      <button onclick="closeCommitmentModal()" class="text-slate-500 hover:text-slate-200 transition h-6 w-6 flex items-center justify-center rounded-full hover:bg-slate-700">
+        <i class="fa-solid fa-xmark text-sm"></i>
+      </button>
+    </div>
+    <form id="commitmentForm" class="space-y-4">
+      <input type="hidden" id="editCommitmentId" />
+      <div>
+        <label class="block text-[11px] font-semibold text-slate-400 mb-1.5 uppercase tracking-wide">Proveedor</label>
+        <input id="comProveedor" type="text" class="w-full rounded-xl bg-slate-900/80 border border-slate-700 text-xs px-3 py-2 text-slate-100 transition" required />
+      </div>
+      <div>
+        <label class="block text-[11px] font-semibold text-slate-400 mb-1.5 uppercase tracking-wide">Concepto</label>
+        <input id="comConcepto" type="text" class="w-full rounded-xl bg-slate-900/80 border border-slate-700 text-xs px-3 py-2 text-slate-100 transition" required />
+      </div>
+      <div class="grid grid-cols-2 gap-3">
+        <div>
+          <label class="block text-[11px] font-semibold text-slate-400 mb-1.5 uppercase tracking-wide">Monto</label>
+          <input id="comMonto" type="number" step="0.01" class="w-full rounded-xl bg-slate-900/80 border border-slate-700 text-xs px-3 py-2 text-slate-100 font-mono transition" required />
+        </div>
+        <div>
+          <label class="block text-[11px] font-semibold text-slate-400 mb-1.5 uppercase tracking-wide">Fecha Vto</label>
+          <input id="comFecha" type="date" class="w-full rounded-xl bg-slate-900/80 border border-slate-700 text-xs px-3 py-2 text-slate-100 transition" />
+        </div>
+      </div>
+      <div>
+        <label class="block text-[11px] font-semibold text-slate-400 mb-1.5 uppercase tracking-wide">Observaciones</label>
+        <input id="comObs" type="text" class="w-full rounded-xl bg-slate-900/80 border border-slate-700 text-xs px-3 py-2 text-slate-100 transition" />
+      </div>
+      <div>
+        <div class="flex items-center justify-between mb-1.5">
+          <label class="block text-[11px] font-semibold text-slate-400 uppercase tracking-wide">Etiquetas</label>
+          <button type="button" onclick="openTagManagerModal()" class="text-[10px] text-emerald-400 hover:text-emerald-300 transition">
+            <i class="fa-solid fa-plus mr-1"></i>Gestionar
+          </button>
+        </div>
+        <div id="commitmentTagSelector" class="flex flex-wrap gap-1.5 p-2 rounded-xl bg-slate-900/60 border border-slate-700/60 min-h-[2.5rem]"></div>
+      </div>
+      <div class="pt-1 flex justify-end gap-2">
+        <button type="button" onclick="closeCommitmentModal()" class="btn-ghost text-xs">Cancelar</button>
+        <button type="submit" class="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full text-xs font-semibold text-slate-950 transition"
+                style="background:linear-gradient(135deg,#f43f5e,#f59e0b);box-shadow:0 4px 12px rgba(244,63,94,0.3)">Guardar</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Modal: Ingreso Esperado -->
+<div id="incomeExpectedModal" class="fixed inset-0 z-40 hidden items-center justify-center bg-slate-950/80 modal-backdrop">
+  <div class="absolute inset-0" onclick="closeIncomeExpectedModal()"></div>
+  <div class="relative z-50 w-full max-w-md mx-4 rounded-2xl glass-card border-neon-cyan shadow-2xl p-5 sm:p-6 animate-fade-in">
+    <div class="flex items-start justify-between gap-3 mb-5">
+      <h3 id="incomeExpectedModalTitle" class="text-base font-semibold" style="background:linear-gradient(90deg,#06b6d4,#3b82f6);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;">Nuevo Ingreso Esperado</h3>
+      <button onclick="closeIncomeExpectedModal()" class="text-slate-500 hover:text-slate-200 transition h-6 w-6 flex items-center justify-center rounded-full hover:bg-slate-700">
+        <i class="fa-solid fa-xmark text-sm"></i>
+      </button>
+    </div>
+    <form id="incomeExpectedForm" class="space-y-4">
+      <input type="hidden" id="editIncomeExpectedId" />
+      <div>
+        <label class="block text-[11px] font-semibold text-slate-400 mb-1.5 uppercase tracking-wide">Fuente</label>
+        <input id="incFuente" type="text" placeholder="Ej: Cliente, Empresa..." class="w-full rounded-xl bg-slate-900/80 border border-slate-700 text-xs px-3 py-2 text-slate-100 transition" required />
+      </div>
+      <div>
+        <label class="block text-[11px] font-semibold text-slate-400 mb-1.5 uppercase tracking-wide">Concepto</label>
+        <input id="incConcepto" type="text" placeholder="Ej: Pago proyecto..." class="w-full rounded-xl bg-slate-900/80 border border-slate-700 text-xs px-3 py-2 text-slate-100 transition" required />
+      </div>
+      <div class="grid grid-cols-2 gap-3">
+        <div>
+          <label class="block text-[11px] font-semibold text-slate-400 mb-1.5 uppercase tracking-wide">Monto</label>
+          <input id="incMonto" type="number" step="0.01" class="w-full rounded-xl bg-slate-900/80 border border-slate-700 text-xs px-3 py-2 text-slate-100 font-mono transition" required />
+        </div>
+        <div>
+          <label class="block text-[11px] font-semibold text-slate-400 mb-1.5 uppercase tracking-wide">Fecha Esperada</label>
+          <input id="incFecha" type="date" class="w-full rounded-xl bg-slate-900/80 border border-slate-700 text-xs px-3 py-2 text-slate-100 transition" />
+        </div>
+      </div>
+      <div>
+        <label class="block text-[11px] font-semibold text-slate-400 mb-1.5 uppercase tracking-wide">Observaciones</label>
+        <input id="incObs" type="text" class="w-full rounded-xl bg-slate-900/80 border border-slate-700 text-xs px-3 py-2 text-slate-100 transition" />
+      </div>
+      <div class="pt-1 flex justify-end gap-2">
+        <button type="button" onclick="closeIncomeExpectedModal()" class="btn-ghost text-xs">Cancelar</button>
+        <button type="submit" class="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full text-xs font-semibold text-slate-950 transition"
+                style="background:linear-gradient(135deg,#06b6d4,#3b82f6);box-shadow:0 4px 12px rgba(6,182,212,0.3)">Guardar</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Modal: Deuda Histórica -->
+<div id="debtModal" class="fixed inset-0 z-40 hidden items-center justify-center bg-slate-950/80 modal-backdrop">
+  <div class="absolute inset-0" onclick="closeDebtModal()"></div>
+  <div class="relative z-50 w-full max-w-md mx-4 rounded-2xl glass-card border-neon-amber shadow-2xl p-5 sm:p-6 animate-fade-in">
+    <div class="flex items-start justify-between gap-3 mb-5">
+      <h3 id="debtModalTitle" class="text-base font-semibold" style="background:linear-gradient(90deg,#f59e0b,#f43f5e);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;">Nueva Deuda Histórica</h3>
+      <button onclick="closeDebtModal()" class="text-slate-500 hover:text-slate-200 transition h-6 w-6 flex items-center justify-center rounded-full hover:bg-slate-700">
+        <i class="fa-solid fa-xmark text-sm"></i>
+      </button>
+    </div>
+    <form id="debtForm" class="space-y-4">
+      <input type="hidden" id="editDebtId" />
+      <div>
+        <label class="block text-[11px] font-semibold text-slate-400 mb-1.5 uppercase tracking-wide">Nombre / Concepto</label>
+        <input id="debtName" type="text" placeholder="Ej: Tarjeta Visa" class="w-full rounded-xl bg-slate-900/80 border border-slate-700 text-xs px-3 py-2 text-slate-100 transition" required />
+      </div>
+      <div>
+        <label class="block text-[11px] font-semibold text-slate-400 mb-1.5 uppercase tracking-wide">Monto Total</label>
+        <input id="debtAmount" type="number" step="0.01" class="w-full rounded-xl bg-slate-900/80 border border-slate-700 text-xs px-3 py-2 text-slate-100 font-mono transition" required />
+      </div>
+
+      <!-- ── Etiqueta asociada: selector TODAS + quick-create ── -->
+      <div>
+        <div class="flex items-center justify-between mb-1.5">
+          <label class="block text-[11px] font-semibold text-slate-400 uppercase tracking-wide">
+            Etiqueta Asociada <span class="normal-case font-normal text-slate-600">(opcional)</span>
+          </label>
+          <button type="button" onclick="toggleQuickTagPanel()"
+                  class="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full transition"
+                  style="background:rgba(245,158,11,0.15);color:#f59e0b;border:1px solid rgba(245,158,11,0.3)">
+            <i class="fa-solid fa-plus text-[9px]"></i>Nueva etiqueta
+          </button>
+        </div>
+
+        <!-- Selector — muestra TODAS las etiquetas, agrupadas -->
+        <select id="debtTagId" class="w-full rounded-xl bg-slate-900/80 border border-slate-700 text-xs px-3 py-2 text-slate-100 transition">
+          <option value="">-- Sin etiqueta --</option>
+        </select>
+        <p class="text-[10px] text-slate-600 mt-1">
+          <i class="fa-solid fa-circle-info mr-1 text-amber-500/60"></i>
+          Al guardar, la etiqueta elegida quedará marcada como <strong class="text-amber-400/80">etiqueta de deuda</strong> automáticamente.
+        </p>
+
+        <!-- Panel creación rápida de etiqueta (colapsado por defecto) -->
+        <div id="quickTagPanel" class="hidden mt-3 rounded-xl border border-amber-500/25 bg-amber-500/5 p-3 space-y-2">
+          <p class="text-[10px] font-semibold text-amber-400 uppercase tracking-wide">
+            <i class="fa-solid fa-wand-magic-sparkles mr-1"></i>Crear etiqueta al instante
+          </p>
+          <div class="flex gap-2">
+            <input id="quickTagName" type="text" placeholder="Nombre de la etiqueta"
+                   class="flex-1 rounded-lg bg-slate-950/70 border border-slate-700 text-xs px-2.5 py-1.5 text-slate-100 transition min-w-0" />
+            <select id="quickTagColor" class="rounded-lg bg-slate-950/70 border border-slate-700 text-xs px-2 py-1.5 text-slate-100 shrink-0">
+              <option value="amber">Ámbar</option>
+              <option value="emerald">Esmeralda</option>
+              <option value="cyan">Cyan</option>
+              <option value="rose">Rosa</option>
+              <option value="purple">Púrpura</option>
+              <option value="blue">Azul</option>
+            </select>
+            <button type="button" onclick="quickCreateTagForDebt()"
+                    class="shrink-0 px-3 py-1.5 rounded-lg text-xs font-semibold text-slate-950 transition"
+                    style="background:linear-gradient(135deg,#f59e0b,#f97316);box-shadow:0 2px 8px rgba(245,158,11,0.3)">
+              <i class="fa-solid fa-plus"></i>
+            </button>
+          </div>
+          <p id="quickTagFeedback" class="text-[10px] hidden"></p>
+        </div>
+      </div>
+
+      <div class="pt-1 flex justify-end gap-2">
+        <button type="button" onclick="closeDebtModal()" class="btn-ghost text-xs">Cancelar</button>
+        <button type="submit" class="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full text-xs font-semibold text-slate-950 transition"
+                style="background:linear-gradient(135deg,#f59e0b,#f97316);box-shadow:0 4px 12px rgba(245,158,11,0.3)">Guardar</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Modal: Auditoría de Deuda -->
+<div id="debtAuditModal" class="fixed inset-0 z-40 hidden items-center justify-center bg-slate-950/80 modal-backdrop overflow-y-auto">
+  <div class="absolute inset-0" onclick="closeDebtAuditModal()"></div>
+  <div class="relative z-50 w-full max-w-2xl mx-4 my-8 rounded-2xl glass-card border-neon-cyan shadow-2xl p-5 sm:p-6 animate-fade-in">
+    <div class="flex items-start justify-between gap-3 mb-5">
+      <div>
+        <h3 id="debtAuditTitle" class="text-base font-semibold section-title-neon">Auditoría de Deuda</h3>
+        <p class="text-[11px] text-slate-500 mt-0.5">Desglose mes a mes de pagos detectados por etiqueta</p>
+      </div>
+      <button onclick="closeDebtAuditModal()" class="text-slate-500 hover:text-slate-200 transition h-6 w-6 flex items-center justify-center rounded-full hover:bg-slate-700">
+        <i class="fa-solid fa-xmark text-sm"></i>
+      </button>
+    </div>
+    <div id="debtAuditSummary" class="grid grid-cols-3 gap-3 mb-5"></div>
+    <div id="debtAuditWarning" class="hidden mb-4 p-3 rounded-xl bg-amber-500/10 border border-amber-500/30 text-xs text-amber-300">
+      <i class="fa-solid fa-triangle-exclamation mr-1.5"></i>
+      <span id="debtAuditWarningText"></span>
+    </div>
+    <div class="rounded-xl border border-slate-700/60 overflow-hidden mb-5">
+      <table class="min-w-full text-xs">
+        <thead>
+          <tr class="text-[10px] uppercase tracking-wide text-slate-500 border-b border-slate-700/60 bg-slate-900/60">
+            <th class="text-left px-4 py-2.5 font-semibold">Mes</th>
+            <th class="text-right px-4 py-2.5 font-semibold">Txs contadas</th>
+            <th class="text-right px-4 py-2.5 font-semibold">Total del mes</th>
+            <th class="text-right px-4 py-2.5 font-semibold">Acumulado</th>
+          </tr>
+        </thead>
+        <tbody id="debtAuditRows" class="divide-y divide-slate-800/50"></tbody>
+      </table>
+    </div>
+    <div class="mb-5">
+      <h4 class="text-xs font-semibold text-amber-400 mb-1 flex items-center gap-1.5">
+        <i class="fa-solid fa-circle-exclamation text-[11px]"></i>
+        Transacciones posiblemente relacionadas pero SIN etiqueta
+      </h4>
+      <p class="text-[10px] text-slate-500 mb-2">Busqueda por nombre de la deuda en descripcion — estas NO estan siendo contadas</p>
+      <div id="debtAuditUntagged" class="space-y-1 max-h-36 overflow-y-auto rounded-lg border border-slate-800/60 p-2 bg-slate-950/40"></div>
+    </div>
+    <div class="p-4 rounded-xl bg-slate-900/60 border border-slate-700/40">
+      <h4 class="text-xs font-semibold text-slate-300 mb-1 flex items-center gap-1.5">
+        <i class="fa-solid fa-sliders text-cyan-400 text-[11px]"></i>
+        Ajuste manual de pagos no registrados
+      </h4>
+      <p class="text-[10px] text-slate-500 mb-3">Suma pagos historicos que no estan en el sistema. El ajuste NO crea transacciones, solo corrige el saldo.</p>
+      <div class="flex gap-2 items-end">
+        <div class="flex-1">
+          <label class="block text-[10px] text-slate-400 mb-1">Monto a agregar al pagado</label>
+          <div class="relative">
+            <span class="absolute inset-y-0 left-3 flex items-center pointer-events-none text-slate-500 text-xs font-mono">$</span>
+            <input id="debtAuditAdjust" type="number" step="0.01" min="0" placeholder="0.00"
+                   class="w-full rounded-lg bg-slate-950/70 border border-slate-700 text-xs pl-6 pr-3 py-2 text-slate-100 font-mono transition" />
+          </div>
+        </div>
+        <div class="flex-1">
+          <label class="block text-[10px] text-slate-400 mb-1">Concepto</label>
+          <input id="debtAuditAdjustNote" type="text" placeholder="Ej: Pagos ene-mar sin etiquetar"
+                 class="w-full rounded-lg bg-slate-950/70 border border-slate-700 text-xs px-3 py-2 text-slate-100 transition" />
+        </div>
+        <button onclick="applyDebtAuditAdjust()" class="btn-primary text-xs shrink-0">
+          <i class="fa-solid fa-plus text-[10px]"></i>Aplicar
+        </button>
+      </div>
+      <div id="debtAuditAdjustFeedback" class="mt-2 text-[10px]"></div>
+    </div>
+    <div class="mt-4 flex justify-end">
+      <button onclick="closeDebtAuditModal()" class="btn-ghost text-xs">Cerrar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Gestor de Etiquetas -->
+<div id="tagManagerModal" class="fixed inset-0 z-40 hidden items-center justify-center bg-slate-950/80 modal-backdrop">
+  <div class="absolute inset-0" onclick="closeTagManagerModal()"></div>
+  <div class="relative z-50 w-full max-w-lg mx-4 rounded-2xl glass-card border-neon-cyan shadow-2xl p-5 sm:p-6 animate-fade-in">
+    <div class="flex items-start justify-between gap-3 mb-5">
+      <div>
+        <h3 class="text-base font-semibold section-title-neon">Gestor de Etiquetas</h3>
+        <p class="text-[11px] text-slate-500 mt-0.5">Crea etiquetas para vincular transacciones con deudas</p>
+      </div>
+      <button onclick="closeTagManagerModal()" class="text-slate-500 hover:text-slate-200 transition h-6 w-6 flex items-center justify-center rounded-full hover:bg-slate-700">
+        <i class="fa-solid fa-xmark text-sm"></i>
+      </button>
+    </div>
+    <div class="space-y-4">
+      <div class="bg-slate-900/60 rounded-xl p-4 border border-slate-700/60">
+        <h4 class="text-xs font-semibold mb-3 text-slate-300 uppercase tracking-wide">Nueva Etiqueta</h4>
+        <div class="flex gap-2">
+          <input id="newTagName" type="text" placeholder="Nombre de la etiqueta"
+                 class="flex-1 rounded-xl bg-slate-950/70 border border-slate-700 text-xs px-3 py-2 text-slate-100 transition" />
+          <select id="newTagColor" class="rounded-xl bg-slate-950/70 border border-slate-700 text-xs px-2 py-2 text-slate-100">
+            <option value="amber">Ámbar</option>
+            <option value="emerald">Esmeralda</option>
+            <option value="cyan">Cyan</option>
+            <option value="rose">Rosa</option>
+            <option value="purple">Púrpura</option>
+            <option value="blue">Azul</option>
+          </select>
+          <button onclick="addNewTag()" class="px-3 py-2 rounded-xl btn-primary text-sm">
+            <i class="fa-solid fa-plus"></i>
+          </button>
+        </div>
+      </div>
+      <div class="bg-slate-900/60 rounded-xl p-4 border border-slate-700/60">
+        <h4 class="text-xs font-semibold mb-3 text-slate-300 uppercase tracking-wide">Etiquetas Existentes</h4>
+        <div id="tagList" class="space-y-2 max-h-60 overflow-y-auto"></div>
+      </div>
+    </div>
+    <div class="mt-4 pt-4 border-t border-slate-800/60 flex justify-end">
+      <button onclick="closeTagManagerModal()" class="btn-ghost text-xs">Cerrar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Etiquetas de Deuda -->
+<div id="debtTagsModal" class="fixed inset-0 z-40 hidden items-center justify-center bg-slate-950/80 modal-backdrop">
+  <div class="absolute inset-0" onclick="closeDebtTagsModal()"></div>
+  <div class="relative z-50 w-full max-w-lg mx-4 rounded-2xl glass-card border-neon-amber shadow-2xl p-5 sm:p-6 animate-fade-in">
+    <div class="flex items-start justify-between gap-3 mb-5">
+      <div>
+        <h3 class="text-base font-semibold section-title">Etiquetas vinculadas a Deudas</h3>
+        <p class="text-[11px] text-slate-500 mt-0.5">Las transacciones con estas etiquetas actualizan las deudas automáticamente</p>
+      </div>
+      <button onclick="closeDebtTagsModal()" class="text-slate-500 hover:text-slate-200 transition h-6 w-6 flex items-center justify-center rounded-full hover:bg-slate-700">
+        <i class="fa-solid fa-xmark text-sm"></i>
+      </button>
+    </div>
+    <div class="bg-slate-900/60 rounded-xl p-4 border border-slate-700/60">
+      <div id="debtTagList" class="space-y-2 max-h-60 overflow-y-auto"></div>
+    </div>
+    <div class="mt-4 pt-4 border-t border-slate-800/60 flex justify-between items-center">
+      <p class="text-[11px] text-slate-600"><i class="fa-solid fa-info-circle mr-1"></i>Las transacciones con etiquetas de deuda restan del monto total</p>
+      <button onclick="closeDebtTagsModal()" class="btn-ghost text-xs">Cerrar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Nuevo Mes -->
+<div id="newMonthModal" class="fixed inset-0 z-40 hidden items-center justify-center bg-slate-950/80 modal-backdrop">
+  <div class="absolute inset-0" onclick="closeNewMonthModal()"></div>
+  <div class="relative z-50 w-full max-w-sm mx-4 rounded-2xl glass-card border-neon-emerald shadow-2xl p-5 animate-fade-in">
+    <div class="flex items-start justify-between gap-3 mb-5">
+      <h3 class="text-base font-semibold section-title-neon">Nuevo Ejercicio Mensual</h3>
+      <button onclick="closeNewMonthModal()" class="text-slate-500 hover:text-slate-200 transition h-6 w-6 flex items-center justify-center rounded-full hover:bg-slate-700">
+        <i class="fa-solid fa-xmark text-sm"></i>
+      </button>
+    </div>
+    <div class="space-y-3">
+      <div>
+        <label class="block text-[11px] font-semibold text-slate-400 mb-1.5 uppercase tracking-wide">Año y Mes</label>
+        <input id="newMonthInput" type="month" class="w-full rounded-xl bg-slate-900/80 border border-slate-700 text-xs px-3 py-2 text-slate-100 transition" />
+      </div>
+      <p class="text-xs text-slate-500">Cada ejercicio aísla su contabilidad del resto de los meses.</p>
+    </div>
+    <div class="pt-4 flex justify-end gap-2">
+      <button onclick="closeNewMonthModal()" class="btn-ghost text-xs">Cancelar</button>
+      <button onclick="createNewMonth()" class="btn-primary text-xs">Crear</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Migración de Datos -->
+<div id="migrationModal" class="fixed inset-0 z-40 hidden items-center justify-center bg-slate-950/80 modal-backdrop overflow-y-auto">
+  <div class="absolute inset-0" onclick="closeMigrationModal()"></div>
+  <div class="relative z-50 w-full max-w-2xl mx-4 my-8 rounded-2xl glass-card border border-slate-700/60 shadow-2xl p-5 sm:p-6 animate-fade-in">
+    <div class="flex items-start justify-between gap-3 mb-5">
+      <div>
+        <h3 class="text-base font-semibold section-title">Importar Datos</h3>
+        <p class="text-[11px] text-slate-500 mt-0.5">Carga tus transacciones desde versiones anteriores</p>
+      </div>
+      <button onclick="closeMigrationModal()" class="text-slate-500 hover:text-slate-200 transition h-6 w-6 flex items-center justify-center rounded-full hover:bg-slate-700">
+        <i class="fa-solid fa-xmark text-sm"></i>
+      </button>
+    </div>
+    <div class="space-y-4">
+      <!-- Opción 1 -->
+      <div class="bg-slate-900/60 rounded-xl p-4 border border-emerald-500/20">
+        <h4 class="text-xs font-semibold mb-2 flex items-center gap-2 text-slate-300 uppercase tracking-wide">
+          <i class="fa-solid fa-file-arrow-up text-emerald-400"></i>Opción 1: Backup Completo (Recomendado)
+        </h4>
+        <p class="text-[11px] text-slate-500 mb-3">Importa un archivo .json con todos tus datos</p>
+        <input type="file" id="backupFileInput" accept=".json" onchange="loadBackupFromFile(this)"
+          class="flex-1 rounded-xl bg-slate-950/70 border border-slate-700 text-xs px-3 py-2 file:mr-3 file:py-1 file:px-3 file:rounded-lg file:border-0 file:bg-emerald-600/80 file:text-white hover:file:bg-emerald-500 w-full text-slate-400" />
+        <div id="backupFileResult" class="mt-3 text-xs"></div>
+      </div>
+      <!-- Opción 2 -->
+      <div class="bg-slate-900/60 rounded-xl p-4 border border-slate-700/60">
+        <h4 class="text-xs font-semibold mb-2 flex items-center gap-2 text-slate-300 uppercase tracking-wide">
+          <i class="fa-solid fa-wand-magic-sparkles text-cyan-400"></i>Opción 2: Detección Automática
+        </h4>
+        <p class="text-[11px] text-slate-500 mb-3">Busca datos en las claves comunes de localStorage</p>
+        <button onclick="autoDetectData()" class="btn-ghost text-xs">
+          <i class="fa-solid fa-wand-magic-sparkles text-cyan-400"></i>Buscar automáticamente
+        </button>
+        <div id="autoDetectResult" class="mt-3 text-xs"></div>
+      </div>
+      <!-- Opción 3 -->
+      <div class="bg-slate-900/60 rounded-xl p-4 border border-slate-700/60">
+        <h4 class="text-xs font-semibold mb-2 flex items-center gap-2 text-slate-300 uppercase tracking-wide">
+          <i class="fa-solid fa-key text-amber-400"></i>Opción 3: Clave Específica
+        </h4>
+        <p class="text-[11px] text-slate-500 mb-3">Ingresa la clave exacta de tu localStorage anterior</p>
+        <div class="flex gap-2">
+          <input id="manualKey" type="text" placeholder="ultimateDashboard_v2"
+            class="flex-1 rounded-xl bg-slate-950/70 border border-slate-700 text-xs px-3 py-2 text-slate-100 font-mono transition" />
+          <button onclick="loadFromManualKey()" class="btn-ghost text-xs border-amber-500/30 text-amber-400">
+            <i class="fa-solid fa-download"></i>Cargar
+          </button>
+        </div>
+        <div id="manualKeyResult" class="mt-3 text-xs"></div>
+        <button onclick="showAllKeys()" class="mt-2 text-[11px] text-slate-500 hover:text-slate-300 underline transition">
+          Mostrar todas las claves →
+        </button>
+        <div id="allKeysResult" class="mt-2 text-xs max-h-32 overflow-y-auto"></div>
+      </div>
+      <!-- Opción 4 -->
+      <div class="bg-slate-900/60 rounded-xl p-4 border border-slate-700/60">
+        <h4 class="text-xs font-semibold mb-2 flex items-center gap-2 text-slate-300 uppercase tracking-wide">
+          <i class="fa-solid fa-code text-purple-400"></i>Opción 4: JSON Directo
+        </h4>
+        <textarea id="jsonInput" rows="4" placeholder='{"transactions":[...]}' class="w-full rounded-xl bg-slate-950/70 border border-slate-700 text-xs px-3 py-2 font-mono resize-none text-slate-300 transition"></textarea>
+        <button onclick="loadFromJSON()" class="mt-2 btn-ghost text-xs border-purple-500/30 text-purple-400">
+          <i class="fa-solid fa-upload"></i>Importar JSON
+        </button>
+        <div id="jsonResult" class="mt-3 text-xs"></div>
+      </div>
+    </div>
+    <div class="mt-5 pt-4 border-t border-slate-800/60 flex justify-between items-center">
+      <p class="text-[11px] text-slate-600"><i class="fa-solid fa-info-circle mr-1"></i>Los datos se combinarán con los existentes</p>
+      <button onclick="closeMigrationModal()" class="btn-ghost text-xs">Cerrar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- SCRIPTS                                                       -->
+<!-- ============================================================ -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+  // ================================================================
+  // CONSTANTES Y CONFIGURACIÓN GLOBAL
+  // ================================================================
+  const STORAGE_KEY = 'ultimateDashboard_v4';
+
+  const CATEGORY_LABELS = {
+    income:   'Ingresos',
+    fixed:    'Gastos Fijos',
+    variable: 'Gastos Variables'
+  };
+
+  const TAG_COLORS = {
+    amber:   { bg: 'bg-amber-500/20',   text: 'text-amber-400',   border: 'border-amber-500/30',   hex: '#f59e0b' },
+    emerald: { bg: 'bg-emerald-500/20', text: 'text-emerald-400', border: 'border-emerald-500/30', hex: '#10b981' },
+    cyan:    { bg: 'bg-cyan-500/20',    text: 'text-cyan-400',    border: 'border-cyan-500/30',    hex: '#06b6d4' },
+    rose:    { bg: 'bg-rose-500/20',    text: 'text-rose-400',    border: 'border-rose-500/30',    hex: '#f43f5e' },
+    purple:  { bg: 'bg-purple-500/20',  text: 'text-purple-400',  border: 'border-purple-500/30',  hex: '#a855f7' },
+    blue:    { bg: 'bg-blue-500/20',    text: 'text-blue-400',    border: 'border-blue-500/30',    hex: '#3b82f6' }
+  };
+
+  // ================================================================
+  // ESTADO GLOBAL MENSUALIZADO
+  // ================================================================
+  let state = {
+    activeMonth:    null,
+    monthlyData:    {},
+    historicalDebts: [],
+    tags:           [],
+    sortConfig:     { field: 'date', direction: 'desc' }
+  };
+
+  let charts = { distribution: null, overview: null, debt: null };
+  let selectedTags = new Set();
+  let selectedCommitmentTags = new Set();
+
+  // ================================================================
+  // INICIALIZACIÓN
+  // ================================================================
+  document.addEventListener('DOMContentLoaded', () => {
+    loadData();
+    initEventListeners();
+    setDefaultDates();
+    renderMonthSelector();
+    refreshUI();
+  });
+
+  // ================================================================
+  // PERSISTENCIA
+  // ================================================================
+  function loadData() {
+    try {
+      const stored = localStorage.getItem(STORAGE_KEY);
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        state.monthlyData     = parsed.monthlyData     || {};
+        state.historicalDebts = parsed.historicalDebts || [];
+        state.tags            = parsed.tags            || [];
+        state.sortConfig      = parsed.sortConfig      || { field: 'date', direction: 'desc' };
+        state.activeMonth     = parsed.activeMonth     || null;
+
+        // Migración desde formato v3 (datos planos)
+        if (parsed.transactions && Array.isArray(parsed.transactions) && parsed.transactions.length > 0) {
+          const migrKey = inferMonthKey(parsed.transactions);
+          if (!state.monthlyData[migrKey]) {
+            state.monthlyData[migrKey] = {
+              transactions:   parsed.transactions,
+              commitments:    parsed.commitments   || [],
+              incomeExpected: parsed.incomeExpected || [],
+              dateFilter:     { from: null, to: null }
+            };
+          }
+          if (!state.activeMonth) state.activeMonth = migrKey;
+          saveData();
+        }
+      }
+
+      if (state.tags.length === 0) createDefaultTags();
+      if (!state.activeMonth || !state.monthlyData[state.activeMonth]) {
+        const currentMonth = getCurrentMonthKey();
+        if (!state.monthlyData[currentMonth]) createMonthExercise(currentMonth);
+        state.activeMonth = currentMonth;
+      }
+      saveData();
+    } catch (e) {
+      console.warn('Error al cargar datos:', e);
+      createDefaultTags();
+    }
+  }
+
+  function saveData() {
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify({
+        activeMonth:     state.activeMonth,
+        monthlyData:     state.monthlyData,
+        historicalDebts: state.historicalDebts,
+        tags:            state.tags,
+        sortConfig:      state.sortConfig
+      }));
+    } catch (e) {
+      console.warn('Error al guardar:', e);
+    }
+  }
+
+  // ================================================================
+  // UTILIDADES DE FECHA Y MES
+  // ================================================================
+  function getCurrentMonthKey() {
+    const d = new Date();
+    return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0');
+  }
+
+  function formatMonthLabel(key) {
+    if (!key) return '—';
+    const [year, month] = key.split('-');
+    const months = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+    return months[parseInt(month) - 1] + ' ' + year;
+  }
+
+  function inferMonthKey(transactions) {
+    const counts = {};
+    transactions.forEach(tx => {
+      if (tx.date) {
+        const key = tx.date.substring(0, 7);
+        counts[key] = (counts[key] || 0) + 1;
+      }
+    });
+    const keys = Object.keys(counts);
+    if (!keys.length) return getCurrentMonthKey();
+    return keys.reduce((a, b) => counts[a] > counts[b] ? a : b);
+  }
+
+  function createMonthExercise(key) {
+    if (!state.monthlyData[key]) {
+      state.monthlyData[key] = {
+        transactions:   [],
+        commitments:    [],
+        incomeExpected: [],
+        dateFilter:     { from: null, to: null }
+      };
+    }
+  }
+
+  function activeExercise() {
+    if (!state.activeMonth || !state.monthlyData[state.activeMonth]) {
+      createMonthExercise(state.activeMonth || getCurrentMonthKey());
+    }
+    return state.monthlyData[state.activeMonth];
+  }
+
+  // ================================================================
+  // SELECTOR DE MES
+  // ================================================================
+  function renderMonthSelector() {
+    const bar = document.getElementById('monthSelectorBar');
+    if (!bar) return;
+    bar.innerHTML = '';
+    const keys = Object.keys(state.monthlyData).sort();
+    keys.forEach(key => {
+      const btn = document.createElement('button');
+      btn.className = 'month-pill text-[11px] px-3 py-1 rounded-full border border-slate-700 text-slate-400' +
+        (key === state.activeMonth ? ' active' : '');
+      btn.textContent = formatMonthLabel(key);
+      btn.onclick = () => switchMonth(key);
+      bar.appendChild(btn);
+    });
+    const lbl = document.getElementById('headerPeriodLabel');
+    if (lbl && state.activeMonth) lbl.textContent = 'Ejercicio: ' + formatMonthLabel(state.activeMonth);
+  }
+
+  function switchMonth(key) {
+    if (!state.monthlyData[key]) createMonthExercise(key);
+    state.activeMonth = key;
+    activeExercise().dateFilter = { from: null, to: null };
+    document.getElementById('filterFrom').value   = '';
+    document.getElementById('filterTo').value     = '';
+    document.getElementById('searchInput').value  = '';
+    document.getElementById('filterCategory').value = '';
+    destroyCharts();
+    saveData();
+    renderMonthSelector();
+    refreshUI();
+  }
+
+  function openNewMonthModal() {
+    document.getElementById('newMonthInput').value = getCurrentMonthKey();
+    document.getElementById('newMonthModal').classList.replace('hidden', 'flex');
+  }
+  function closeNewMonthModal() {
+    document.getElementById('newMonthModal').classList.replace('flex', 'hidden');
+  }
+  function createNewMonth() {
+    const key = document.getElementById('newMonthInput').value;
+    if (!key) { alert('Selecciona un mes válido'); return; }
+    if (state.monthlyData[key]) {
+      if (!confirm('Ya existe un ejercicio para ' + formatMonthLabel(key) + '. ¿Cambiar a él?')) return;
+    } else {
+      createMonthExercise(key);
+    }
+    closeNewMonthModal();
+    switchMonth(key);
+  }
+
+  function destroyCharts() {
+    ['distribution','overview','debt'].forEach(k => {
+      if (charts[k]) { charts[k].destroy(); charts[k] = null; }
+    });
+  }
+
+  // ================================================================
+  // TAGS
+  // ================================================================
+  function createDefaultTags() {
+    state.tags = [
+      { id: cryptoId(), name: 'Alimentación',        color: 'emerald', isDebtTag: false },
+      { id: cryptoId(), name: 'Servicios',            color: 'cyan',    isDebtTag: false },
+      { id: cryptoId(), name: 'Deuda Tarjeta',        color: 'amber',   isDebtTag: true  },
+      { id: cryptoId(), name: 'Alquiler',             color: 'rose',    isDebtTag: false },
+      { id: cryptoId(), name: 'Entretenimiento',      color: 'purple',  isDebtTag: false },
+      { id: cryptoId(), name: 'Transporte',           color: 'blue',    isDebtTag: false }
+    ];
+    saveData();
+  }
+
+  function renderTags() {
+    const container = document.getElementById('tagsContainer');
+    if (!container) return;
+    container.innerHTML = '';
+    state.tags.forEach(tag => {
+      const colors = TAG_COLORS[tag.color] || TAG_COLORS.amber;
+      const tagEl = document.createElement('span');
+      tagEl.className = `inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium ${colors.bg} ${colors.text} border ${colors.border} cursor-pointer tag-item`;
+      tagEl.innerHTML = tag.isDebtTag
+        ? `<i class="fa-solid fa-link text-[10px]"></i>${escapeHtml(tag.name)}`
+        : escapeHtml(tag.name);
+      tagEl.onclick = () => filterByTag(tag.id);
+      container.appendChild(tagEl);
+    });
+  }
+
+  function renderTagSelector(selectedTagIds = []) {
+    const container = document.getElementById('tagSelector');
+    if (!container) return;
+    container.innerHTML = '';
+    selectedTags = new Set(selectedTagIds);
+    state.tags.forEach(tag => {
+      const colors = TAG_COLORS[tag.color] || TAG_COLORS.amber;
+      const isSelected = selectedTags.has(tag.id);
+      const tagEl = document.createElement('label');
+      tagEl.className = `inline-flex items-center gap-1.5 px-2 py-1 rounded-lg text-xs cursor-pointer transition ${colors.bg} ${colors.text} border ${isSelected ? colors.border : 'border-transparent'}`;
+      tagEl.innerHTML = `
+        <input type="checkbox" value="${tag.id}" ${isSelected ? 'checked' : ''}
+          onchange="toggleTagSelection('${tag.id}')" class="hidden">
+        ${tag.isDebtTag ? '<i class="fa-solid fa-link text-[10px]"></i>' : ''}
+        ${escapeHtml(tag.name)}
+      `;
+      container.appendChild(tagEl);
+    });
+  }
+
+  function toggleTagSelection(tagId) {
+    if (selectedTags.has(tagId)) selectedTags.delete(tagId);
+    else selectedTags.add(tagId);
+    renderTagSelector(Array.from(selectedTags));
+  }
+
+  function renderCommitmentTagSelector(selectedTagIds = []) {
+    const container = document.getElementById('commitmentTagSelector');
+    if (!container) return;
+    container.innerHTML = '';
+    selectedCommitmentTags = new Set(selectedTagIds);
+    if (!state.tags.length) {
+      container.innerHTML = '<p class="text-slate-500 text-[10px]">No hay etiquetas. <button type="button" onclick="openTagManagerModal()" class="text-emerald-400 hover:underline">Crear una</button></p>';
+      return;
+    }
+    state.tags.forEach(tag => {
+      const colors = TAG_COLORS[tag.color] || TAG_COLORS.amber;
+      const isSelected = selectedCommitmentTags.has(tag.id);
+      const tagEl = document.createElement('label');
+      tagEl.className = `inline-flex items-center gap-1.5 px-2 py-1 rounded-lg text-xs cursor-pointer transition ${colors.bg} ${colors.text} border ${isSelected ? colors.border : 'border-transparent'}`;
+      tagEl.innerHTML = `
+        <input type="checkbox" value="${tag.id}" ${isSelected ? 'checked' : ''}
+          onchange="toggleCommitmentTagSelection('${tag.id}')" class="hidden">
+        ${tag.isDebtTag ? '<i class="fa-solid fa-link text-[10px]"></i>' : ''}
+        ${escapeHtml(tag.name)}
+      `;
+      container.appendChild(tagEl);
+    });
+  }
+
+  function toggleCommitmentTagSelection(tagId) {
+    if (selectedCommitmentTags.has(tagId)) selectedCommitmentTags.delete(tagId);
+    else selectedCommitmentTags.add(tagId);
+    renderCommitmentTagSelector(Array.from(selectedCommitmentTags));
+  }
+
+  function openTagManagerModal() {
+    renderTagList();
+    document.getElementById('tagManagerModal').classList.replace('hidden', 'flex');
+  }
+  function closeTagManagerModal() {
+    document.getElementById('tagManagerModal').classList.replace('flex', 'hidden');
+    document.getElementById('newTagName').value = '';
+  }
+
+  function renderTagList() {
+    const container = document.getElementById('tagList');
+    if (!container) return;
+    container.innerHTML = '';
+    if (!state.tags.length) {
+      container.innerHTML = '<p class="text-slate-500 text-center py-4 text-xs">No hay etiquetas</p>';
+      return;
+    }
+    state.tags.forEach(tag => {
+      const colors = TAG_COLORS[tag.color] || TAG_COLORS.amber;
+      const tagEl = document.createElement('div');
+      tagEl.className = 'flex items-center justify-between p-2 rounded-xl bg-slate-900/60 hover:bg-slate-800/60 transition';
+      tagEl.innerHTML = `
+        <div class="flex items-center gap-2">
+          <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] ${colors.bg} ${colors.text} border ${colors.border}">
+            ${tag.isDebtTag ? '<i class="fa-solid fa-link text-[9px]"></i>' : ''}
+            ${escapeHtml(tag.name)}
+          </span>
+          ${tag.isDebtTag ? '<span class="text-[10px] text-amber-400/70 font-medium">Deuda</span>' : ''}
+        </div>
+        <div class="flex gap-1">
+          <button onclick="toggleDebtTag('${tag.id}')" title="${tag.isDebtTag ? 'Quitar de deuda' : 'Marcar como deuda'}"
+                  class="text-[11px] px-2 py-1 rounded-lg ${tag.isDebtTag ? 'bg-amber-500/20 text-amber-400' : 'bg-slate-700/60 text-slate-400'} hover:opacity-80 transition">
+            <i class="fa-solid fa-link"></i>
+          </button>
+          <button onclick="deleteTag('${tag.id}')" class="text-[11px] px-2 py-1 rounded-lg bg-rose-500/15 text-rose-400 hover:bg-rose-500/25 transition">
+            <i class="fa-solid fa-trash"></i>
+          </button>
+        </div>
+      `;
+      container.appendChild(tagEl);
+    });
+  }
+
+  function addNewTag() {
+    const name  = document.getElementById('newTagName').value.trim();
+    const color = document.getElementById('newTagColor').value;
+    if (!name) { alert('Ingresa un nombre para la etiqueta'); return; }
+    if (state.tags.find(t => t.name.toLowerCase() === name.toLowerCase())) { alert('Ya existe una etiqueta con ese nombre'); return; }
+    state.tags.push({ id: cryptoId(), name, color, isDebtTag: false });
+    saveData();
+    document.getElementById('newTagName').value = '';
+    renderTagList();
+    renderTags();
+    refreshUI();
+  }
+
+  function deleteTag(tagId) {
+    if (!confirm('¿Eliminar esta etiqueta?')) return;
+    state.tags = state.tags.filter(t => t.id !== tagId);
+    Object.values(state.monthlyData).forEach(ex => {
+      ex.transactions.forEach(tx => { if (tx.tags) tx.tags = tx.tags.filter(id => id !== tagId); });
+      ex.commitments.forEach(c => { if (c.tags) c.tags = c.tags.filter(id => id !== tagId); });
+    });
+    state.historicalDebts.forEach(d => { if (d.tagId === tagId) d.tagId = null; });
+    saveData(); renderTagList(); renderTags(); refreshUI();
+  }
+
+  function toggleDebtTag(tagId) {
+    const tag = state.tags.find(t => t.id === tagId);
+    if (tag) {
+      tag.isDebtTag = !tag.isDebtTag;
+      saveData(); renderTagList(); renderTags(); updateDebtChart();
+    }
+  }
+
+  function openDebtTagsModal() {
+    renderDebtTagList();
+    document.getElementById('debtTagsModal').classList.replace('hidden', 'flex');
+  }
+  function closeDebtTagsModal() {
+    document.getElementById('debtTagsModal').classList.replace('flex', 'hidden');
+  }
+
+  // ── Lista TODAS las etiquetas actualmente vinculadas a alguna deuda
+  // Incluye etiquetas isDebtTag:true Y cualquier tagId referenciado en
+  // state.historicalDebts aunque no esté marcada todavía.
+  function renderDebtTagList() {
+    const container = document.getElementById('debtTagList');
+    if (!container) return;
+
+    // Unión: etiquetas marcadas como deuda + etiquetas usadas en alguna deuda
+    const debtTagIds = new Set([
+      ...state.tags.filter(t => t.isDebtTag).map(t => t.id),
+      ...state.historicalDebts.filter(d => d.tagId).map(d => d.tagId)
+    ]);
+
+    if (!debtTagIds.size) {
+      container.innerHTML = '<p class="text-slate-500 text-center py-4 text-xs">No hay etiquetas vinculadas a deudas aún.</p>';
+      return;
+    }
+
+    container.innerHTML = '';
+    debtTagIds.forEach(tagId => {
+      const tag = state.tags.find(t => t.id === tagId);
+      if (!tag) return; // etiqueta eliminada pero referenciada
+
+      const colors       = TAG_COLORS[tag.color] || TAG_COLORS.amber;
+      const linkedDebts  = state.historicalDebts.filter(d => d.tagId === tag.id);
+      const totalOrig    = linkedDebts.reduce((s, d) => s + d.amount, 0);
+      const totalSpent   = linkedDebts.reduce((s, d) => s + getSpentForDebt(d), 0);
+      const totalRem     = Math.max(0, totalOrig - totalSpent);
+      const pct          = totalOrig > 0 ? Math.min(100, (totalSpent / totalOrig) * 100) : 0;
+
+      const tagEl = document.createElement('div');
+      tagEl.className = 'p-3 rounded-xl bg-slate-900/60 border border-slate-800/60';
+      tagEl.innerHTML = `
+        <div class="flex items-center justify-between gap-2 mb-2">
+          <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] ${colors.bg} ${colors.text} border ${colors.border}">
+            <i class="fa-solid fa-link text-[9px]"></i>${escapeHtml(tag.name)}
+          </span>
+          <span class="text-[10px] text-slate-500">${linkedDebts.length} deuda(s)</span>
+        </div>
+        <div class="grid grid-cols-3 gap-2 text-[10px] mb-2">
+          <div class="text-center">
+            <p class="text-slate-600 uppercase tracking-wide">Total</p>
+            <p class="font-semibold font-mono text-slate-300">${formatCurrency(totalOrig)}</p>
+          </div>
+          <div class="text-center">
+            <p class="text-slate-600 uppercase tracking-wide">Pagado</p>
+            <p class="font-semibold font-mono text-emerald-400">${formatCurrency(totalSpent)}</p>
+          </div>
+          <div class="text-center">
+            <p class="text-slate-600 uppercase tracking-wide">Restante</p>
+            <p class="font-semibold font-mono ${totalRem > 0 ? 'text-rose-400' : 'text-emerald-400'}">${formatCurrency(totalRem)}</p>
+          </div>
+        </div>
+        <div class="h-1.5 w-full rounded-full bg-slate-800 overflow-hidden">
+          <div class="h-full rounded-full transition-all" style="width:${pct.toFixed(1)}%;background:${pct >= 100 ? '#10b981' : pct > 66 ? '#f59e0b' : '#f43f5e'}"></div>
+        </div>
+        <p class="text-[10px] text-slate-600 mt-1 text-right">${pct.toFixed(0)}% pagado</p>
+      `;
+      container.appendChild(tagEl);
+    });
+  }
+
+  // ================================================================
+  // TRANSACCIONES
+  // ================================================================
+  function handleTransactionSubmit(e) {
+    e.preventDefault();
+    const form = e.target;
+    const editId = document.getElementById('editId').value;
+    const ex = activeExercise();
+    const tx = {
+      id:          editId || cryptoId(),
+      type:        form.category.value,
+      description: form.description.value.trim(),
+      amount:      parseFloat(form.amount.value),
+      date:        form.date.value,
+      tags:        Array.from(selectedTags)
+    };
+    if (editId) {
+      const idx = ex.transactions.findIndex(t => t.id === editId);
+      if (idx !== -1) ex.transactions[idx] = tx;
+    } else {
+      ex.transactions.push(tx);
+    }
+    updateLinkedDebts(tx);
+    saveData(); refreshUI(); closeModal();
+    form.reset(); setDefaultDates(); selectedTags.clear();
+  }
+
+  // ================================================================
+  // updateLinkedDebts — SOLO marca la etiqueta como isDebtTag:true
+  // si aún no lo está. NO muta debt.amount: el saldo gastado/restante
+  // se calcula 100% dinámico en getSpentForDebt() para que editar o
+  // eliminar una transacción lo recalcule en tiempo real.
+  // ================================================================
+  function updateLinkedDebts(transaction) {
+    if (!transaction.tags || !transaction.tags.length) return;
+    transaction.tags.forEach(tagId => {
+      const tag = state.tags.find(t => t.id === tagId);
+      // Si la etiqueta existe y hay una deuda vinculada, asegurarse de
+      // que esté marcada como deuda para que el rastreo funcione.
+      if (tag && !tag.isDebtTag) {
+        const hasLinkedDebt = state.historicalDebts.some(d => d.tagId === tagId);
+        if (hasLinkedDebt) tag.isDebtTag = true;
+      }
+    });
+  }
+
+  // ── Calcula "gastado" de una deuda sumando TODOS los ejercicios ──
+  // No usa getFilteredTransactions() (que filtra por mes/fecha activa)
+  // sino que itera state.monthlyData completo para historial total.
+  function getSpentForDebt(debt) {
+    // Suma transacciones etiquetadas de TODOS los ejercicios
+    let total = debt.tagId ? 0 : 0;
+    if (debt.tagId) {
+      Object.values(state.monthlyData).forEach(ex => {
+        (ex.transactions || []).forEach(tx => {
+          if (tx.type !== 'income' && (tx.tags || []).includes(debt.tagId)) {
+            total += Number(tx.amount) || 0;
+          }
+        });
+      });
+    }
+    // Suma ajuste manual (pagos historicos no etiquetados corregidos via auditoria)
+    total += (debt.manualAdjust || 0);
+    return total;
+  }
+
+  function editTransaction(id) {
+    const tx = activeExercise().transactions.find(t => t.id === id);
+    if (!tx) return;
+    document.getElementById('editId').value            = tx.id;
+    document.getElementById('category').value          = tx.type;
+    document.getElementById('description').value       = tx.description;
+    document.getElementById('amount').value            = tx.amount;
+    document.getElementById('date').value              = tx.date;
+    document.getElementById('modalTitle').textContent  = 'Editar Movimiento';
+    renderTagSelector(tx.tags || []);
+    document.getElementById('transactionModal').classList.replace('hidden', 'flex');
+  }
+
+  function deleteTransaction(id) {
+    if (!confirm('¿Eliminar este movimiento?')) return;
+    const ex = activeExercise();
+    ex.transactions = ex.transactions.filter(t => t.id !== id);
+    saveData(); refreshUI();
+  }
+
+  function onCategoryChange() { renderTagSelector(Array.from(selectedTags)); }
+
+  function openModal(category = 'income') {
+    document.getElementById('editId').value              = '';
+    document.getElementById('category').value           = category;
+    document.getElementById('modalTitle').textContent   = 'Nuevo Movimiento';
+    selectedTags.clear();
+    renderTagSelector();
+    document.getElementById('transactionModal').classList.replace('hidden', 'flex');
+  }
+
+  function closeModal() {
+    document.getElementById('transactionModal').classList.replace('flex', 'hidden');
+    document.getElementById('transactionForm').reset();
+    setDefaultDates(); selectedTags.clear();
+  }
+
+  function sortTransactions(field) {
+    if (state.sortConfig.field === field) {
+      state.sortConfig.direction = state.sortConfig.direction === 'asc' ? 'desc' : 'asc';
+    } else {
+      state.sortConfig.field = field;
+      state.sortConfig.direction = 'desc';
+    }
+    saveData(); updateTransactionTable();
+  }
+
+  // ================================================================
+  // INGRESOS ESPERADOS
+  // ================================================================
+  function handleIncomeExpectedSubmit(e) {
+    e.preventDefault();
+    const form = e.target;
+    const editId = document.getElementById('editIncomeExpectedId').value;
+    const ex = activeExercise();
+    const income = {
+      id:            editId || cryptoId(),
+      fuente:        form.incFuente.value.trim(),
+      concepto:      form.incConcepto.value.trim(),
+      monto:         parseFloat(form.incMonto.value),
+      fecha:         form.incFecha.value,
+      observaciones: form.incObs.value.trim(),
+      recibido:      false
+    };
+    if (editId) {
+      const idx = ex.incomeExpected.findIndex(i => i.id === editId);
+      if (idx !== -1) { income.recibido = ex.incomeExpected[idx].recibido; ex.incomeExpected[idx] = income; }
+    } else {
+      ex.incomeExpected.push(income);
+    }
+    saveData(); refreshUI(); closeIncomeExpectedModal(); form.reset();
+  }
+
+  function toggleIncomeReceived(id) {
+    const ex = activeExercise();
+    const income = ex.incomeExpected.find(i => i.id === id);
+    if (income) {
+      income.recibido = !income.recibido;
+      if (income.recibido) {
+        const txId = cryptoId();
+        income.transactionId = txId;
+        ex.transactions.push({
+          id: txId, type: 'income',
+          description: `${income.fuente} - ${income.concepto}`,
+          amount: income.monto,
+          date: new Date().toISOString().split('T')[0],
+          tags: []
+        });
+      } else {
+        if (income.transactionId) {
+          ex.transactions = ex.transactions.filter(t => t.id !== income.transactionId);
+          income.transactionId = null;
+        }
+      }
+      saveData();
+      // FIX: defer DOM rebuild outside the checkbox's onchange event stack
+      setTimeout(() => refreshUI(), 0);
+    }
+  }
+
+  function editIncomeExpected(id) {
+    const income = activeExercise().incomeExpected.find(i => i.id === id);
+    if (!income) return;
+    document.getElementById('editIncomeExpectedId').value            = income.id;
+    document.getElementById('incFuente').value                       = income.fuente;
+    document.getElementById('incConcepto').value                     = income.concepto;
+    document.getElementById('incMonto').value                        = income.monto;
+    document.getElementById('incFecha').value                        = income.fecha;
+    document.getElementById('incObs').value                          = income.observaciones || '';
+    document.getElementById('incomeExpectedModalTitle').textContent  = 'Editar Ingreso Esperado';
+    document.getElementById('incomeExpectedModal').classList.replace('hidden', 'flex');
+  }
+
+  function deleteIncomeExpected(id) {
+    if (!confirm('¿Eliminar este ingreso esperado?')) return;
+    const ex = activeExercise();
+    ex.incomeExpected = ex.incomeExpected.filter(i => i.id !== id);
+    saveData(); refreshUI();
+  }
+
+  function openIncomeExpectedModal() {
+    document.getElementById('editIncomeExpectedId').value           = '';
+    document.getElementById('incomeExpectedModalTitle').textContent = 'Nuevo Ingreso Esperado';
+    document.getElementById('incomeExpectedModal').classList.replace('hidden', 'flex');
+  }
+  function closeIncomeExpectedModal() {
+    document.getElementById('incomeExpectedModal').classList.replace('flex', 'hidden');
+    document.getElementById('incomeExpectedForm').reset();
+  }
+
+  // ================================================================
+  // COMPROMISOS
+  // ================================================================
+  function handleCommitmentSubmit(e) {
+    e.preventDefault();
+    const form = e.target;
+    const editId = document.getElementById('editCommitmentId').value;
+    const ex = activeExercise();
+    const commitment = {
+      id:            editId || cryptoId(),
+      proveedor:     form.comProveedor.value.trim(),
+      concepto:      form.comConcepto.value.trim(),
+      monto:         parseFloat(form.comMonto.value),
+      fecha:         form.comFecha.value,
+      observaciones: form.comObs.value.trim(),
+      tags:          Array.from(selectedCommitmentTags),
+      pagado:        false
+    };
+    if (editId) {
+      const idx = ex.commitments.findIndex(c => c.id === editId);
+      if (idx !== -1) { commitment.pagado = ex.commitments[idx].pagado; ex.commitments[idx] = commitment; }
+    } else {
+      ex.commitments.push(commitment);
+    }
+    saveData(); refreshUI(); closeCommitmentModal(); form.reset();
+  }
+
+  // ================================================================
+  // BUG FIX: toggleCommitmentPaid
+  // Al marcar como pagado se crea una transacción tipo 'fixed'.
+  // calculateTotals ya la cuenta en totals.fixed, por lo que no se
+  // debe sumar commitmentsPaid de nuevo en totals.expenses.
+  // Además, el setTimeout evita que el DOM se destruya mientras el
+  // browser aún procesa el evento onchange del checkbox.
+  // ================================================================
+  function toggleCommitmentPaid(id) {
+    const ex = activeExercise();
+    const commitment = ex.commitments.find(c => c.id === id);
+    if (commitment) {
+      commitment.pagado = !commitment.pagado;
+      if (commitment.pagado) {
+        const txId = cryptoId();
+        commitment.transactionId = txId;
+        ex.transactions.push({
+          id: txId, type: 'fixed',
+          description: `${commitment.proveedor} - ${commitment.concepto}`,
+          amount: commitment.monto,
+          date: new Date().toISOString().split('T')[0],
+          tags: commitment.tags || []
+        });
+      } else {
+        if (commitment.transactionId) {
+          ex.transactions = ex.transactions.filter(t => t.id !== commitment.transactionId);
+          commitment.transactionId = null;
+        }
+      }
+      saveData();
+      // FIX: defer DOM rebuild outside the checkbox's onchange event stack → evita el freeze
+      setTimeout(() => refreshUI(), 0);
+    }
+  }
+
+  function editCommitment(id) {
+    const commitment = activeExercise().commitments.find(c => c.id === id);
+    if (!commitment) return;
+    document.getElementById('editCommitmentId').value            = commitment.id;
+    document.getElementById('comProveedor').value                = commitment.proveedor;
+    document.getElementById('comConcepto').value                 = commitment.concepto;
+    document.getElementById('comMonto').value                    = commitment.monto;
+    document.getElementById('comFecha').value                    = commitment.fecha;
+    document.getElementById('comObs').value                      = commitment.observaciones || '';
+    document.getElementById('commitmentModalTitle').textContent  = 'Editar Compromiso';
+    renderCommitmentTagSelector(commitment.tags || []);
+    document.getElementById('commitmentModal').classList.replace('hidden', 'flex');
+  }
+
+  function deleteCommitment(id) {
+    if (!confirm('¿Eliminar este compromiso?')) return;
+    const ex = activeExercise();
+    // Eliminar también la transacción vinculada si existe
+    const commitment = ex.commitments.find(c => c.id === id);
+    if (commitment && commitment.transactionId) {
+      ex.transactions = ex.transactions.filter(t => t.id !== commitment.transactionId);
+    }
+    ex.commitments = ex.commitments.filter(c => c.id !== id);
+    saveData(); refreshUI();
+  }
+
+  function openCommitmentModal() {
+    document.getElementById('editCommitmentId').value           = '';
+    document.getElementById('commitmentModalTitle').textContent = 'Nuevo Compromiso';
+    renderCommitmentTagSelector([]);
+    document.getElementById('commitmentModal').classList.replace('hidden', 'flex');
+  }
+  function closeCommitmentModal() {
+    document.getElementById('commitmentModal').classList.replace('flex', 'hidden');
+    document.getElementById('commitmentForm').reset();
+  }
+
+  // ================================================================
+  // DEUDAS HISTÓRICAS
+  // ================================================================
+  function handleDebtSubmit(e) {
+    e.preventDefault();
+    const form = e.target;
+    const editId  = document.getElementById('editDebtId').value;
+    const tagId   = form.debtTagId.value || null;
+
+    const debt = {
+      id:     editId || cryptoId(),
+      name:   form.debtName.value.trim(),
+      amount: parseFloat(form.debtAmount.value),
+      tagId
+    };
+
+    // ── Auto-promovar la etiqueta elegida a isDebtTag:true ──────────
+    // Cualquier etiqueta del sistema puede vincularse a una deuda.
+    // Al guardar, nos aseguramos de que quede marcada para que el
+    // rastreo automático de pagos funcione correctamente.
+    if (tagId) {
+      const linkedTag = state.tags.find(t => t.id === tagId);
+      if (linkedTag && !linkedTag.isDebtTag) {
+        linkedTag.isDebtTag = true;
+      }
+    }
+
+    if (editId) {
+      const idx = state.historicalDebts.findIndex(d => d.id === editId);
+      if (idx !== -1) state.historicalDebts[idx] = debt;
+    } else {
+      state.historicalDebts.push(debt);
+    }
+    saveData(); refreshUI(); closeDebtModal(); form.reset();
+  }
+
+  function editDebt(id) {
+    const debt = state.historicalDebts.find(d => d.id === id);
+    if (!debt) return;
+    document.getElementById('editDebtId').value   = debt.id;
+    document.getElementById('debtName').value     = debt.name;
+    document.getElementById('debtAmount').value   = debt.amount;
+    updateDebtTagSelector();
+    document.getElementById('debtTagId').value    = debt.tagId || '';
+    document.getElementById('debtModalTitle').textContent = 'Editar Deuda';
+    document.getElementById('debtModal').classList.replace('hidden', 'flex');
+  }
+
+  function deleteDebt(id) {
+    if (!confirm('¿Eliminar esta deuda?')) return;
+    state.historicalDebts = state.historicalDebts.filter(d => d.id !== id);
+    saveData(); refreshUI();
+  }
+
+  function openDebtModal() {
+    document.getElementById('editDebtId').value = '';
+    document.getElementById('debtModalTitle').textContent = 'Nueva Deuda Histórica';
+    updateDebtTagSelector();
+    _hideQuickTagPanel();
+    document.getElementById('debtModal').classList.replace('hidden', 'flex');
+  }
+  function closeDebtModal() {
+    document.getElementById('debtModal').classList.replace('flex', 'hidden');
+    document.getElementById('debtForm').reset();
+    _hideQuickTagPanel();
+  }
+
+  // ── Quick-create tag desde el modal de deuda ───────────────────
+  function toggleQuickTagPanel() {
+    const panel = document.getElementById('quickTagPanel');
+    panel.classList.toggle('hidden');
+    if (!panel.classList.contains('hidden')) {
+      document.getElementById('quickTagName').focus();
+    }
+  }
+  function _hideQuickTagPanel() {
+    const panel = document.getElementById('quickTagPanel');
+    if (panel) panel.classList.add('hidden');
+    const inp = document.getElementById('quickTagName');
+    if (inp) inp.value = '';
+    const fb = document.getElementById('quickTagFeedback');
+    if (fb) { fb.textContent = ''; fb.classList.add('hidden'); }
+  }
+  function quickCreateTagForDebt() {
+    const name  = (document.getElementById('quickTagName').value || '').trim();
+    const color = document.getElementById('quickTagColor').value || 'amber';
+    const fb    = document.getElementById('quickTagFeedback');
+
+    fb.classList.remove('hidden');
+    if (!name) {
+      fb.className = 'text-[10px] text-rose-400';
+      fb.textContent = '⚠ Escribe un nombre para la etiqueta.';
+      return;
+    }
+    if (state.tags.find(t => t.name.toLowerCase() === name.toLowerCase())) {
+      fb.className = 'text-[10px] text-amber-400';
+      fb.textContent = '⚠ Ya existe una etiqueta con ese nombre. Selecciónala en el listado.';
+      updateDebtTagSelector();
+      // Pre-seleccionar la existente
+      const existing = state.tags.find(t => t.name.toLowerCase() === name.toLowerCase());
+      if (existing) document.getElementById('debtTagId').value = existing.id;
+      return;
+    }
+
+    // Crear como isDebtTag:true directamente
+    const newTag = { id: cryptoId(), name, color, isDebtTag: true };
+    state.tags.push(newTag);
+    saveData();
+
+    // Actualizar selector y pre-seleccionar la nueva etiqueta
+    updateDebtTagSelector();
+    document.getElementById('debtTagId').value = newTag.id;
+
+    fb.className = 'text-[10px] text-emerald-400';
+    fb.textContent = `✓ Etiqueta "${name}" creada y seleccionada.`;
+    document.getElementById('quickTagName').value = '';
+
+    // Ocultar panel tras 1.5s
+    setTimeout(() => _hideQuickTagPanel(), 1500);
+    renderTags();
+  }
+
+  // ── Muestra TODAS las etiquetas del sistema, agrupadas ────────────
+  // Grupo 1: ya marcadas como deuda (isDebtTag:true)
+  // Grupo 2: otras etiquetas disponibles
+  // Al elegir cualquiera y guardar, handleDebtSubmit la promoverá
+  // automáticamente a isDebtTag:true.
+  function updateDebtTagSelector() {
+    const select = document.getElementById('debtTagId');
+    select.innerHTML = '<option value="">-- Sin etiqueta --</option>';
+
+    const debtTags  = state.tags.filter(t =>  t.isDebtTag);
+    const otherTags = state.tags.filter(t => !t.isDebtTag);
+
+    if (debtTags.length) {
+      const grp = document.createElement('optgroup');
+      grp.label = '📌 Vinculadas a deudas';
+      debtTags.forEach(tag => {
+        const o = document.createElement('option');
+        o.value = tag.id; o.textContent = tag.name;
+        grp.appendChild(o);
+      });
+      select.appendChild(grp);
+    }
+
+    if (otherTags.length) {
+      const grp = document.createElement('optgroup');
+      grp.label = '🏷 Otras etiquetas (se vincularán al guardar)';
+      otherTags.forEach(tag => {
+        const o = document.createElement('option');
+        o.value = tag.id; o.textContent = tag.name;
+        grp.appendChild(o);
+      });
+      select.appendChild(grp);
+    }
+
+    if (!state.tags.length) {
+      const o = document.createElement('option');
+      o.disabled = true; o.textContent = 'No hay etiquetas — crea una con "+ Nueva etiqueta"';
+      select.appendChild(o);
+    }
+  }
+
+  // ================================================================
+  // FILTROS
+  // ================================================================
+  function applyDateFilter() {
+    const from = document.getElementById('filterFrom').value;
+    const to   = document.getElementById('filterTo').value;
+    activeExercise().dateFilter = { from: from || null, to: to || null };
+    saveData(); refreshUI();
+  }
+
+  function clearDateFilter() {
+    activeExercise().dateFilter = { from: null, to: null };
+    document.getElementById('filterFrom').value = '';
+    document.getElementById('filterTo').value   = '';
+    saveData(); refreshUI();
+  }
+
+  function getFilteredTransactions() {
+    const ex = activeExercise();
+    let filtered = ex.transactions || [];
+    const df = ex.dateFilter || {};
+    if (df.from || df.to) {
+      filtered = filtered.filter(tx => {
+        if (df.from && tx.date < df.from) return false;
+        if (df.to   && tx.date > df.to)   return false;
+        return true;
+      });
+    }
+    return filtered;
+  }
+
+  function filterByTag(tagId) {
+    const tag = state.tags.find(t => t.id === tagId);
+    if (tag) {
+      document.getElementById('searchInput').value = tag.name;
+      updateTransactionTable();
+    }
+  }
+
+  // ================================================================
+  // EXPORTACIÓN
+  // ================================================================
+  function exportCSV() {
+    const transactions = getFilteredTransactions();
+    if (!transactions.length) { alert('No hay transacciones para exportar'); return; }
+    let csv = 'Fecha,Categoría,Descripción,Etiquetas,Monto\n';
+    transactions.forEach(tx => {
+      const tagNames = (tx.tags || []).map(id => { const t = state.tags.find(t => t.id === id); return t ? t.name : ''; }).join('; ');
+      csv += `${tx.date},${CATEGORY_LABELS[tx.type] || tx.type},"${tx.description.replace(/"/g,'""')}","${tagNames}",${tx.amount}\n`;
+    });
+    triggerDownload(new Blob(['\ufeff' + csv], { type: 'text/csv;charset=utf-8;' }), `transacciones_${state.activeMonth || 'export'}.csv`);
+  }
+
+  function exportExcel() {
+    const transactions = getFilteredTransactions();
+    if (!transactions.length) { alert('No hay transacciones para exportar'); return; }
+    const data = transactions.map(tx => {
+      const tagNames = (tx.tags || []).map(id => { const t = state.tags.find(t => t.id === id); return t ? t.name : ''; }).join(', ');
+      return { Fecha: tx.date, Categoría: CATEGORY_LABELS[tx.type] || tx.type, Descripción: tx.description, Etiquetas: tagNames, Monto: tx.amount };
+    });
+    const ws = XLSX.utils.json_to_sheet(data);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Transacciones');
+    XLSX.writeFile(wb, `transacciones_${state.activeMonth || 'export'}.xlsx`);
+  }
+
+  function triggerDownload(blob, filename) {
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }
+
+  // ================================================================
+  // BACKUP PDF
+  // ================================================================
+  function exportFullBackup() {
+    const totals = calculateTotals();
+    const ex = activeExercise();
+    const monthLabel = state.activeMonth ? formatMonthLabel(state.activeMonth) : 'Ejercicio';
+    const now = new Date().toLocaleString('es-AR');
+
+    const txRows = (ex.transactions || []).map(tx => {
+      const sign  = tx.type === 'income' ? '+' : '-';
+      const color = tx.type === 'income' ? '#10b981' : '#f43f5e';
+      return `<tr>
+        <td style="padding:4px 8px;border-bottom:1px solid #e5e7eb;">${tx.date}</td>
+        <td style="padding:4px 8px;border-bottom:1px solid #e5e7eb;">${CATEGORY_LABELS[tx.type] || tx.type}</td>
+        <td style="padding:4px 8px;border-bottom:1px solid #e5e7eb;">${escapeHtml(tx.description)}</td>
+        <td style="padding:4px 8px;border-bottom:1px solid #e5e7eb;text-align:right;color:${color};font-weight:600;">${sign} ${formatCurrencyPlain(tx.amount)}</td>
+      </tr>`;
+    }).join('');
+
+    const comRows = (ex.commitments || []).map(c => `<tr>
+      <td style="padding:4px 8px;border-bottom:1px solid #e5e7eb;">${escapeHtml(c.proveedor)}</td>
+      <td style="padding:4px 8px;border-bottom:1px solid #e5e7eb;">${escapeHtml(c.concepto)}</td>
+      <td style="padding:4px 8px;border-bottom:1px solid #e5e7eb;text-align:right;">${formatCurrencyPlain(c.monto)}</td>
+      <td style="padding:4px 8px;border-bottom:1px solid #e5e7eb;text-align:center;">${c.pagado ? '✅' : '⏳'}</td>
+    </tr>`).join('');
+
+    const incRows = (ex.incomeExpected || []).map(i => `<tr>
+      <td style="padding:4px 8px;border-bottom:1px solid #e5e7eb;">${escapeHtml(i.fuente)}</td>
+      <td style="padding:4px 8px;border-bottom:1px solid #e5e7eb;">${escapeHtml(i.concepto)}</td>
+      <td style="padding:4px 8px;border-bottom:1px solid #e5e7eb;text-align:right;">${formatCurrencyPlain(i.monto)}</td>
+      <td style="padding:4px 8px;border-bottom:1px solid #e5e7eb;text-align:center;">${i.recibido ? '✅' : '⏳'}</td>
+    </tr>`).join('');
+
+    const pdfHtml = `<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8">
+    <title>Reporte Financiero – ${monthLabel}</title>
+    <style>
+      body{font-family:Arial,sans-serif;font-size:12px;color:#111;margin:24px;}
+      h1{font-size:20px;margin-bottom:4px;color:#065f46;}
+      .sub{color:#6b7280;font-size:11px;margin-bottom:16px;}
+      .kpi{display:flex;gap:12px;margin-bottom:16px;flex-wrap:wrap;}
+      .kpi-box{background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;padding:12px 16px;min-width:120px;}
+      .kpi-label{font-size:10px;color:#6b7280;text-transform:uppercase;letter-spacing:.05em;}
+      .kpi-value{font-size:18px;font-weight:700;margin-top:4px;}
+      table{width:100%;border-collapse:collapse;margin-bottom:20px;}
+      th{text-align:left;padding:6px 8px;background:#f3f4f6;font-size:10px;text-transform:uppercase;letter-spacing:.05em;color:#374151;}
+      h2{font-size:14px;color:#111;margin:20px 0 8px;border-bottom:2px solid #e5e7eb;padding-bottom:4px;}
+    </style></head><body>
+    <h1>Dashboard Financiero — ${monthLabel}</h1>
+    <p class="sub">Exportado: ${now}</p>
+    <div class="kpi">
+      <div class="kpi-box"><div class="kpi-label">Ingresos</div><div class="kpi-value" style="color:#10b981">${formatCurrencyPlain(totals.income)}</div></div>
+      <div class="kpi-box"><div class="kpi-label">Gastos</div><div class="kpi-value" style="color:#f43f5e">${formatCurrencyPlain(totals.expenses)}</div></div>
+      <div class="kpi-box"><div class="kpi-label">Saldo</div><div class="kpi-value" style="color:${totals.balance>=0?'#10b981':'#f43f5e'}">${formatCurrencyPlain(totals.balance)}</div></div>
+      <div class="kpi-box"><div class="kpi-label">Comp. Pendientes</div><div class="kpi-value" style="color:#8b5cf6">${formatCurrencyPlain(totals.pendingIncome)}</div></div>
+    </div>
+    <h2>Movimientos (${(ex.transactions||[]).length})</h2>
+    <table><thead><tr><th>Fecha</th><th>Categoría</th><th>Descripción</th><th style="text-align:right">Monto</th></tr></thead><tbody>${txRows || '<tr><td colspan="4" style="padding:8px;color:#6b7280;text-align:center">Sin movimientos</td></tr>'}</tbody></table>
+    <h2>Compromisos (${(ex.commitments||[]).length})</h2>
+    <table><thead><tr><th>Proveedor</th><th>Concepto</th><th style="text-align:right">Monto</th><th style="text-align:center">Estado</th></tr></thead><tbody>${comRows || '<tr><td colspan="4" style="padding:8px;color:#6b7280;text-align:center">Sin compromisos</td></tr>'}</tbody></table>
+    <h2>Ingresos Esperados (${(ex.incomeExpected||[]).length})</h2>
+    <table><thead><tr><th>Fuente</th><th>Concepto</th><th style="text-align:right">Monto</th><th style="text-align:center">Estado</th></tr></thead><tbody>${incRows || '<tr><td colspan="4" style="padding:8px;color:#6b7280;text-align:center">Sin ingresos esperados</td></tr>'}</tbody></table>
+    <script>window.print();<\/script></body></html>`;
+
+    const win = window.open('', '_blank');
+    if (win) { win.document.write(pdfHtml); win.document.close(); }
+    else alert('El navegador bloqueó la ventana emergente. Permite pop-ups para esta página.');
+  }
+
+  // ================================================================
+  // RESET
+  // ================================================================
+  function confirmResetDashboard() {
+    const allTx = Object.values(state.monthlyData).reduce((s, ex) => s + ex.transactions.length, 0);
+    const msg = `⚠️ ¿ESTÁS SEGURO?\n\nEsto borrará PERMANENTEMENTE:\n• ${allTx} transacciones\n• Todos los ejercicios mensuales\n• ${state.historicalDebts.length} deudas\n• ${state.tags.length} etiquetas\n\nEscribe "BORRAR" para confirmar:`;
+    const userInput = prompt(msg);
+    if (userInput === 'BORRAR') {
+      localStorage.setItem('ultimateDashboard_emergency_backup', JSON.stringify({
+        version: 'ultimateDashboard_v6', exportDate: new Date().toISOString(), data: state
+      }));
+      state = {
+        activeMonth: null, monthlyData: {}, historicalDebts: [], tags: [],
+        sortConfig: { field: 'date', direction: 'desc' }
+      };
+      createDefaultTags();
+      const currentMonth = getCurrentMonthKey();
+      createMonthExercise(currentMonth);
+      state.activeMonth = currentMonth;
+      document.getElementById('filterFrom').value     = '';
+      document.getElementById('filterTo').value       = '';
+      document.getElementById('searchInput').value    = '';
+      document.getElementById('filterCategory').value = '';
+      destroyCharts();
+      saveData();
+      renderMonthSelector();
+      refreshUI();
+      alert('✅ Dashboard reiniciado.\n\nSe guardó un backup de emergencia en localStorage.');
+    } else if (userInput !== null) {
+      alert('❌ Texto incorrecto. El dashboard NO fue borrado.');
+    }
+  }
+
+  // ================================================================
+  // CÁLCULOS — BUG FIX PRINCIPAL
+  //
+  // ANTES (buggy):
+  //   totals.expenses = totals.fixed + totals.variable + commitmentsPaid
+  //   → Los compromisos pagados se contaban DOS veces:
+  //     1) Como transacción 'fixed' en totals.fixed
+  //     2) Sumados directo en commitmentsPaid
+  //
+  // DESPUÉS (corregido):
+  //   totals.expenses = totals.fixed + totals.variable
+  //   → Los compromisos pagados ya generaron una transacción 'fixed',
+  //     que queda capturada en totals.fixed. No hay doble conteo.
+  //   commitmentsPaid se usa únicamente para el KPI de Pendientes
+  //   (que muestra los NO pagados = pendingIncome).
+  // ================================================================
+  function calculateTotals() {
+    const ex = activeExercise();
+    const filtered = getFilteredTransactions();
+    const totals = { income: 0, fixed: 0, variable: 0 };
+
+    filtered.forEach(tx => {
+      const amt = Number(tx.amount) || 0;
+      if      (tx.type === 'income')   totals.income   += amt;
+      else if (tx.type === 'fixed')    totals.fixed    += amt;
+      else if (tx.type === 'variable') totals.variable += amt;
+    });
+
+    // pendingIncome = compromisos AÚN no pagados (KPI informativo)
+    const pendingIncome = (ex.commitments || []).filter(c => !c.pagado).reduce((s, c) => s + c.monto, 0);
+
+    // CORRECCIÓN: no sumar commitmentsPaid — ya están en totals.fixed vía transacción generada
+    totals.expenses  = totals.fixed + totals.variable;
+    totals.balance   = totals.income - totals.expenses;
+
+    // KPI Deuda = suma de saldos RESTANTES (no montos originales)
+    // Refleja lo que aún falta pagar en todas las deudas históricas.
+    totals.debtTotal = state.historicalDebts.reduce((s, d) => {
+      const spent = getSpentForDebt(d);
+      return s + Math.max(0, d.amount - spent);
+    }, 0);
+
+    totals.pendingIncome = pendingIncome;
+    return totals;
+  }
+
+  function formatCurrency(value) {
+    return new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS', minimumFractionDigits: 0 }).format(value);
+  }
+
+  function formatCurrencyPlain(value) {
+    return new Intl.NumberFormat('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(value);
+  }
+
+  // ================================================================
+  // UI — REFRESH
+  // ================================================================
+  function refreshUI() {
+    const totals = calculateTotals();
+    updateKPIs(totals);
+    updateCharts(totals);
+    updateTransactionTable();
+    updateCommitmentTable();
+    updateIncomeExpectedTable();
+    updateDebtTable();
+    renderTags();
+    const df = activeExercise().dateFilter || {};
+    document.getElementById('filterFrom').value = df.from || '';
+    document.getElementById('filterTo').value   = df.to   || '';
+  }
+
+  function updateKPIs(totals) {
+    const el = id => document.getElementById(id);
+    el('kpiBalance').textContent            = formatCurrency(totals.balance);
+    el('kpiIngresos').textContent           = formatCurrency(totals.income);
+    el('kpiGastos').textContent             = formatCurrency(totals.expenses);
+    el('kpiDeuda').textContent              = formatCurrency(totals.debtTotal);
+    el('kpiIngresosPendientes').textContent = formatCurrency(totals.pendingIncome);
+    // Color dinámico del saldo
+    const balEl = el('kpiBalance');
+    balEl.style.color = totals.balance >= 0 ? '#10b981' : '#f43f5e';
+    // Neon glow dinámico en KPI saldo
+    const kpiCard = balEl.closest('article');
+    if (kpiCard) {
+      kpiCard.style.boxShadow = totals.balance >= 0
+        ? '0 0 40px -10px rgba(16,185,129,0.35), inset 0 1px 0 rgba(255,255,255,0.05)'
+        : '0 0 40px -10px rgba(244,63,94,0.35), inset 0 1px 0 rgba(255,255,255,0.05)';
+      kpiCard.style.borderColor = totals.balance >= 0 ? 'rgba(16,185,129,0.35)' : 'rgba(244,63,94,0.35)';
+    }
+  }
+
+  function updateCharts(totals) {
+    updateDistributionChart(totals);
+    updateOverviewChart(totals);
+    updateDebtChart();
+  }
+
+  function updateDistributionChart(totals) {
+    const ctx = document.getElementById('distributionChart').getContext('2d');
+    const data = [totals.income, totals.fixed, totals.variable];
+    if (!charts.distribution) {
+      charts.distribution = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+          labels: ['Ingresos', 'Gastos Fijos', 'Gastos Variables'],
+          datasets: [{
+            data,
+            backgroundColor: ['rgba(16,185,129,0.85)','rgba(244,63,94,0.85)','rgba(245,158,11,0.85)'],
+            borderWidth: 0,
+            hoverOffset: 6
+          }]
+        },
+        options: {
+          responsive: true, maintainAspectRatio: false, cutout: '65%',
+          plugins: {
+            legend: { display: true, position: 'bottom', labels: { color: '#64748b', font: { size: 10 }, padding: 12 } },
+            tooltip: { callbacks: { label: ctx => `${ctx.label}: ${formatCurrency(ctx.parsed)}` } }
+          }
+        }
+      });
+    } else {
+      charts.distribution.data.datasets[0].data = data;
+      charts.distribution.update();
+    }
+  }
+
+  function updateOverviewChart(totals) {
+    const ctx = document.getElementById('overviewChart').getContext('2d');
+    const data = [totals.income, totals.expenses, totals.balance, totals.pendingIncome];
+    if (!charts.overview) {
+      charts.overview = new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: ['Ingresos', 'Gastos', 'Saldo', 'Comp. Pend.'],
+          datasets: [{
+            data,
+            backgroundColor: [
+              'rgba(16,185,129,0.75)','rgba(244,63,94,0.75)',
+              'rgba(6,182,212,0.75)','rgba(139,92,246,0.75)'
+            ],
+            borderRadius: 8, borderSkipped: false
+          }]
+        },
+        options: {
+          responsive: true, maintainAspectRatio: false,
+          plugins: {
+            legend: { display: false },
+            tooltip: { callbacks: { label: ctx => formatCurrency(ctx.parsed.y) } }
+          },
+          scales: {
+            y: { ticks: { callback: v => formatCurrency(v), color: '#475569', font: { size: 9 } }, grid: { color: 'rgba(30,41,59,0.8)' } },
+            x: { ticks: { color: '#475569', font: { size: 9 } }, grid: { display: false } }
+          }
+        }
+      });
+    } else {
+      charts.overview.data.datasets[0].data = data;
+      charts.overview.update();
+    }
+  }
+
+  // ── Gráfico de deuda: muestra saldo RESTANTE por deuda ───────────
+  // Usa getSpentForDebt() para recalculo dinámico en tiempo real.
+  // Donut doble: dataset[0]=restante, dataset[1]=pagado (más oscuro).
+  function updateDebtChart() {
+    const ctx   = document.getElementById('debtChart').getContext('2d');
+    const debts = state.historicalDebts.filter(d => d.amount > 0);
+
+    if (!debts.length) {
+      if (charts.debt) { charts.debt.destroy(); charts.debt = null; }
+      document.getElementById('debtLegend').textContent = 'No hay deudas registradas';
+      return;
+    }
+
+    const BASE_COLORS = [
+      'rgba(245,158,11,0.85)', 'rgba(244,63,94,0.85)',
+      'rgba(139,92,246,0.85)', 'rgba(6,182,212,0.85)',
+      'rgba(16,185,129,0.85)', 'rgba(59,130,246,0.85)'
+    ];
+    const PAID_COLORS = [
+      'rgba(245,158,11,0.20)', 'rgba(244,63,94,0.20)',
+      'rgba(139,92,246,0.20)', 'rgba(6,182,212,0.20)',
+      'rgba(16,185,129,0.20)', 'rgba(59,130,246,0.20)'
+    ];
+
+    const labels    = debts.map(d => d.name.length > 14 ? d.name.slice(0, 14) + '…' : d.name);
+    const spentArr  = debts.map(d => getSpentForDebt(d));
+    const remArr    = debts.map((d, i) => Math.max(0, d.amount - spentArr[i]));
+    const bgColors  = debts.map((_, i) => BASE_COLORS[i % BASE_COLORS.length]);
+    const paidColors= debts.map((_, i) => PAID_COLORS[i % PAID_COLORS.length]);
+
+    const totalOriginal = debts.reduce((s, d) => s + d.amount, 0);
+    const totalSpent    = spentArr.reduce((a, b) => a + b, 0);
+    const totalRem      = remArr.reduce((a, b) => a + b, 0);
+
+    if (!charts.debt) {
+      charts.debt = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+          labels,
+          datasets: [
+            // dataset externo = restante
+            { data: remArr,   backgroundColor: bgColors,   borderWidth: 0, hoverOffset: 6,
+              label: 'Restante' },
+            // dataset interno = pagado (más tenue)
+            { data: spentArr, backgroundColor: paidColors, borderWidth: 0, hoverOffset: 3,
+              label: 'Pagado' }
+          ]
+        },
+        options: {
+          responsive: true, maintainAspectRatio: false, cutout: '55%',
+          plugins: {
+            legend: { display: false },
+            tooltip: {
+              callbacks: {
+                label: c => {
+                  const ds = c.datasetIndex === 0 ? 'Restante' : 'Pagado';
+                  return ` ${c.label} — ${ds}: ${formatCurrency(c.parsed)}`;
+                }
+              }
+            }
+          }
+        }
+      });
+    } else {
+      charts.debt.data.labels                      = labels;
+      charts.debt.data.datasets[0].data            = remArr;
+      charts.debt.data.datasets[0].backgroundColor = bgColors;
+      charts.debt.data.datasets[1].data            = spentArr;
+      charts.debt.data.datasets[1].backgroundColor = paidColors;
+      charts.debt.update();
+    }
+
+    const pctPaid = totalOriginal > 0 ? ((totalSpent / totalOriginal) * 100).toFixed(0) : 0;
+    document.getElementById('debtLegend').innerHTML =
+      `<span class="text-slate-400">Total original: <strong class="text-amber-400">${formatCurrency(totalOriginal)}</strong></span>` +
+      ` &nbsp;·&nbsp; <span class="text-slate-400">Pagado: <strong class="text-emerald-400">${formatCurrency(totalSpent)}</strong> (${pctPaid}%)</span>` +
+      ` &nbsp;·&nbsp; <span class="text-slate-400">Restante: <strong class="text-rose-400">${formatCurrency(totalRem)}</strong></span>`;
+  }
+
+  function updateTransactionTable() {
+    const tbody  = document.getElementById('transactionsBody');
+    const search = (document.getElementById('searchInput').value || '').toLowerCase();
+    const catFilter = document.getElementById('filterCategory').value;
+    tbody.innerHTML = '';
+
+    let filtered = getFilteredTransactions();
+    if (search)    filtered = filtered.filter(tx =>
+      tx.description.toLowerCase().includes(search) ||
+      (tx.tags || []).some(id => { const t = state.tags.find(t => t.id === id); return t && t.name.toLowerCase().includes(search); })
+    );
+    if (catFilter) filtered = filtered.filter(tx => tx.type === catFilter);
+
+    const { field, direction } = state.sortConfig;
+    filtered.sort((a, b) => {
+      let va = a[field]; let vb = b[field];
+      if (field === 'amount') { va = Number(va); vb = Number(vb); }
+      if (va < vb) return direction === 'asc' ? -1 : 1;
+      if (va > vb) return direction === 'asc' ? 1 : -1;
+      return 0;
+    });
+
+    if (!filtered.length) {
+      tbody.innerHTML = '<tr><td colspan="6" class="px-4 py-10 text-center text-slate-600 text-sm">Sin movimientos en este ejercicio</td></tr>';
+      return;
+    }
+
+    filtered.forEach(tx => {
+      const isIncome   = tx.type === 'income';
+      const sign       = isIncome ? '+' : '−';
+      const colorClass = isIncome ? 'text-emerald-400' : 'text-rose-400';
+      const tagElements = (tx.tags || []).map(tagId => {
+        const tag = state.tags.find(t => t.id === tagId);
+        if (!tag) return '';
+        const colors = TAG_COLORS[tag.color] || TAG_COLORS.amber;
+        return `<span class="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] ${colors.bg} ${colors.text} border ${colors.border}">${escapeHtml(tag.name)}</span>`;
+      }).join('');
+      const catColor = tx.type === 'income' ? 'text-emerald-400/70 bg-emerald-500/10 border-emerald-500/20'
+                     : tx.type === 'fixed'  ? 'text-rose-400/70 bg-rose-500/10 border-rose-500/20'
+                     :                        'text-amber-400/70 bg-amber-500/10 border-amber-500/20';
+      const tr = document.createElement('tr');
+      tr.className = 'tx-row';
+      tr.innerHTML = `
+        <td class="px-4 py-2.5 text-slate-400 text-xs font-mono whitespace-nowrap">
+          ${new Date(tx.date + 'T00:00:00').toLocaleDateString('es-AR')}
+        </td>
+        <td class="px-4 py-2.5">
+          <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium border ${catColor}">
+            ${CATEGORY_LABELS[tx.type] || tx.type}
+          </span>
+        </td>
+        <td class="px-4 py-2.5"><div class="flex flex-wrap gap-1">${tagElements}</div></td>
+        <td class="px-4 py-2.5 text-slate-300 text-xs">${escapeHtml(tx.description)}</td>
+        <td class="px-4 py-2.5 text-right font-semibold font-mono ${colorClass} text-sm whitespace-nowrap">
+          ${sign} ${formatCurrency(Math.abs(tx.amount))}
+        </td>
+        <td class="px-4 py-2.5 text-center">
+          <button onclick="editTransaction('${tx.id}')" class="text-slate-500 hover:text-emerald-400 mr-2 transition"><i class="fa-solid fa-pen text-xs"></i></button>
+          <button onclick="deleteTransaction('${tx.id}')" class="text-slate-500 hover:text-rose-400 transition"><i class="fa-solid fa-trash text-xs"></i></button>
+        </td>`;
+      tbody.appendChild(tr);
+    });
+  }
+
+  function updateCommitmentTable() {
+    const tbody = document.getElementById('commitmentsBody');
+    tbody.innerHTML = '';
+    const ex = activeExercise();
+    if (!ex.commitments.length) {
+      tbody.innerHTML = '<tr><td colspan="8" class="px-4 py-10 text-center text-slate-600 text-sm">Sin compromisos en este ejercicio</td></tr>';
+      return;
+    }
+    ex.commitments.forEach(c => {
+      const tagElements = (c.tags || []).map(tagId => {
+        const tag = state.tags.find(t => t.id === tagId);
+        if (!tag) return '';
+        const colors = TAG_COLORS[tag.color] || TAG_COLORS.amber;
+        return `<span class="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] ${colors.bg} ${colors.text} border ${colors.border}">${escapeHtml(tag.name)}</span>`;
+      }).join(' ');
+      const tr = document.createElement('tr');
+      tr.className = c.pagado ? 'commitment-paid' : 'tx-row';
+      tr.innerHTML = `
+        <td class="px-4 py-2.5 text-slate-300 text-xs">${escapeHtml(c.proveedor)}</td>
+        <td class="px-4 py-2.5 text-slate-300 text-xs">${escapeHtml(c.concepto)}</td>
+        <td class="px-4 py-2.5"><div class="flex flex-wrap gap-1">${tagElements}</div></td>
+        <td class="px-4 py-2.5 text-right font-semibold font-mono text-sm ${c.pagado ? 'text-emerald-400' : 'text-rose-300'}">
+          ${formatCurrency(c.monto)}
+        </td>
+        <td class="px-4 py-2.5 text-slate-500 text-xs whitespace-nowrap">
+          ${c.fecha ? new Date(c.fecha + 'T00:00:00').toLocaleDateString('es-AR') : '—'}
+        </td>
+        <td class="px-4 py-2.5 text-slate-500 text-xs">${escapeHtml(c.observaciones || '')}</td>
+        <td class="px-4 py-2.5 text-center">
+          <input type="checkbox" ${c.pagado ? 'checked' : ''} onchange="toggleCommitmentPaid('${c.id}')" class="custom-checkbox" />
+        </td>
+        <td class="px-4 py-2.5 text-center">
+          <button onclick="editCommitment('${c.id}')" class="text-slate-500 hover:text-emerald-400 mr-2 transition"><i class="fa-solid fa-pen text-xs"></i></button>
+          <button onclick="deleteCommitment('${c.id}')" class="text-slate-500 hover:text-rose-400 transition"><i class="fa-solid fa-trash text-xs"></i></button>
+        </td>`;
+      tbody.appendChild(tr);
+    });
+  }
+
+  function updateIncomeExpectedTable() {
+    const tbody = document.getElementById('incomeExpectedBody');
+    tbody.innerHTML = '';
+    const ex = activeExercise();
+    if (!ex.incomeExpected.length) {
+      tbody.innerHTML = '<tr><td colspan="7" class="px-4 py-10 text-center text-slate-600 text-sm">Sin ingresos esperados en este ejercicio</td></tr>';
+      return;
+    }
+    ex.incomeExpected.forEach(inc => {
+      const tr = document.createElement('tr');
+      tr.className = inc.recibido ? 'commitment-paid' : 'tx-row';
+      tr.innerHTML = `
+        <td class="px-4 py-2.5 text-slate-300 text-xs">${escapeHtml(inc.fuente)}</td>
+        <td class="px-4 py-2.5 text-slate-300 text-xs">${escapeHtml(inc.concepto)}</td>
+        <td class="px-4 py-2.5 text-right font-semibold font-mono text-sm ${inc.recibido ? 'text-emerald-400' : 'text-cyan-300'}">
+          ${formatCurrency(inc.monto)}
+        </td>
+        <td class="px-4 py-2.5 text-slate-500 text-xs whitespace-nowrap">
+          ${inc.fecha ? new Date(inc.fecha + 'T00:00:00').toLocaleDateString('es-AR') : '—'}
+        </td>
+        <td class="px-4 py-2.5 text-slate-500 text-xs">${escapeHtml(inc.observaciones || '')}</td>
+        <td class="px-4 py-2.5 text-center">
+          <input type="checkbox" ${inc.recibido ? 'checked' : ''} onchange="toggleIncomeReceived('${inc.id}')" class="custom-checkbox" />
+        </td>
+        <td class="px-4 py-2.5 text-center">
+          <button onclick="editIncomeExpected('${inc.id}')" class="text-slate-500 hover:text-emerald-400 mr-2 transition"><i class="fa-solid fa-pen text-xs"></i></button>
+          <button onclick="deleteIncomeExpected('${inc.id}')" class="text-slate-500 hover:text-rose-400 transition"><i class="fa-solid fa-trash text-xs"></i></button>
+        </td>`;
+      tbody.appendChild(tr);
+    });
+  }
+
+  // ── Tabla de deudas: saldo calculado dinámico en tiempo real ─────
+  // getSpentForDebt() agrega transacciones de TODOS los ejercicios
+  // (no solo el activo) para que editar/borrar una tx lo refleje
+  // inmediatamente sin importar el mes que está seleccionado.
+  function updateDebtTable() {
+    const tbody = document.getElementById('debtTableBody');
+    if (!tbody) return;
+    tbody.innerHTML = '';
+    if (!state.historicalDebts.length) {
+      tbody.innerHTML = '<tr><td colspan="6" class="px-4 py-6 text-center text-slate-600 text-xs">No hay deudas. Haz click en "Agregar" para crear una.</td></tr>';
+      return;
+    }
+    state.historicalDebts.forEach(debt => {
+      const spent     = getSpentForDebt(debt);
+      const remaining = debt.amount - spent;
+      const pct       = debt.amount > 0 ? Math.min(100, (spent / debt.amount) * 100) : 0;
+      const isDone    = remaining <= 0;
+
+      // Color del restante
+      const remColor = remaining > 0 ? 'text-rose-400'
+                     : remaining === 0 ? 'text-slate-500'
+                     : 'text-emerald-400'; // overpaid
+
+      // Barra de progreso
+      const barColor = isDone ? '#10b981' : pct > 66 ? '#f59e0b' : '#f43f5e';
+      const progressBar = `
+        <div class="mt-1 h-1 w-full rounded-full bg-slate-800 overflow-hidden">
+          <div class="h-full rounded-full transition-all" style="width:${pct.toFixed(1)}%;background:${barColor}"></div>
+        </div>`;
+
+      // Badge de etiqueta
+      const tag = debt.tagId ? state.tags.find(t => t.id === debt.tagId) : null;
+      const tagHtml = tag
+        ? `<span class="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[10px]
+                        ${TAG_COLORS[tag.color]?.bg||'bg-slate-700'}
+                        ${TAG_COLORS[tag.color]?.text||'text-slate-300'}
+                        border ${TAG_COLORS[tag.color]?.border||'border-slate-600'}">
+              <i class="fa-solid fa-link text-[8px]"></i>${escapeHtml(tag.name)}
+           </span>`
+        : '<span class="text-slate-600 text-[10px] italic">Sin etiqueta</span>';
+
+      const tr = document.createElement('tr');
+      tr.className = 'tx-row';
+      tr.innerHTML = `
+        <td class="px-4 py-2.5">
+          <p class="text-slate-200 text-xs font-medium">${escapeHtml(debt.name)}</p>
+          ${progressBar}
+          <p class="text-[10px] text-slate-600 mt-0.5">${pct.toFixed(0)}% pagado</p>
+        </td>
+        <td class="px-4 py-2.5">${tagHtml}</td>
+        <td class="px-4 py-2.5 text-right font-semibold font-mono text-xs text-slate-300">${formatCurrency(debt.amount)}</td>
+        <td class="px-4 py-2.5 text-right font-mono text-xs text-slate-500">${formatCurrency(spent)}</td>
+        <td class="px-4 py-2.5 text-right font-semibold font-mono text-xs ${remColor}">
+          ${isDone
+            ? '<span class="inline-flex items-center gap-1"><i class="fa-solid fa-circle-check text-emerald-400 text-[10px]"></i>' + formatCurrency(Math.abs(remaining)) + '</span>'
+            : formatCurrency(remaining)
+          }
+        </td>
+        <td class="px-4 py-2.5 text-center">
+          <button onclick="openDebtAuditModal('${debt.id}')" class="text-slate-500 hover:text-cyan-400 mr-1.5 transition" title="Ver desglose mes a mes"><i class="fa-solid fa-magnifying-glass-chart text-xs"></i></button>
+          <button onclick="editDebt('${debt.id}')" class="text-slate-500 hover:text-emerald-400 mr-1.5 transition"><i class="fa-solid fa-pen text-xs"></i></button>
+          <button onclick="deleteDebt('${debt.id}')" class="text-slate-500 hover:text-rose-400 transition"><i class="fa-solid fa-trash text-xs"></i></button>
+        </td>`;
+      tbody.appendChild(tr);
+    });
+  }
+
+
+  // ================================================================
+  // AUDITORIA DE DEUDA — modal de desglose mes a mes
+  // ================================================================
+  let _auditDebtId = null;
+
+  function openDebtAuditModal(debtId) {
+    _auditDebtId = debtId;
+    const debt = state.historicalDebts.find(d => d.id === debtId);
+    if (!debt) return;
+
+    document.getElementById('debtAuditTitle').textContent = 'Auditoria: ' + debt.name;
+    document.getElementById('debtAuditAdjust').value = '';
+    document.getElementById('debtAuditAdjustNote').value = '';
+    document.getElementById('debtAuditAdjustFeedback').textContent = '';
+
+    _renderDebtAudit(debt);
+    document.getElementById('debtAuditModal').classList.replace('hidden', 'flex');
+  }
+
+  function closeDebtAuditModal() {
+    document.getElementById('debtAuditModal').classList.replace('flex', 'hidden');
+    _auditDebtId = null;
+  }
+
+  function _renderDebtAudit(debt) {
+    const tag = debt.tagId ? state.tags.find(t => t.id === debt.tagId) : null;
+
+    // ── 1. Desglose mes a mes ─────────────────────────────────────
+    const monthKeys = Object.keys(state.monthlyData).sort();
+    let grandTotal = 0;
+    const tbody = document.getElementById('debtAuditRows');
+    tbody.innerHTML = '';
+
+    if (!monthKeys.length) {
+      tbody.innerHTML = '<tr><td colspan="4" class="px-4 py-6 text-center text-slate-600">Sin ejercicios cargados</td></tr>';
+    } else {
+      monthKeys.forEach(key => {
+        const ex = state.monthlyData[key];
+        const txs = (ex.transactions || []).filter(tx =>
+          tx.type !== 'income' && debt.tagId && (tx.tags || []).includes(debt.tagId)
+        );
+        if (!txs.length) return; // omitir meses sin movimientos de esta deuda
+
+        const monthTotal = txs.reduce((s, tx) => s + (Number(tx.amount) || 0), 0);
+        grandTotal += monthTotal;
+
+        const tr = document.createElement('tr');
+        tr.className = 'tx-row cursor-pointer';
+        tr.innerHTML =
+          '<td class="px-4 py-2 text-slate-300 font-medium">' + formatMonthLabel(key) + '</td>' +
+          '<td class="px-4 py-2 text-right text-slate-500">' + txs.length + ' tx</td>' +
+          '<td class="px-4 py-2 text-right text-amber-400 font-mono font-semibold">' + formatCurrency(monthTotal) + '</td>' +
+          '<td class="px-4 py-2 text-right text-slate-400 font-mono">' + formatCurrency(grandTotal) + '</td>';
+
+        // Expandible: click muestra el detalle de transacciones del mes
+        tr.onclick = () => _toggleAuditMonthDetail(tr, txs, key);
+        tbody.appendChild(tr);
+      });
+
+      if (!tbody.children.length) {
+        tbody.innerHTML = '<tr><td colspan="4" class="px-4 py-6 text-center text-slate-600 text-xs">' +
+          (tag ? 'No se encontraron transacciones con la etiqueta "' + tag.name + '" en ningun mes.' : 'Esta deuda no tiene etiqueta vinculada — no se puede rastrear automaticamente.') +
+          '</td></tr>';
+      }
+    }
+
+    // ── 2. Ajuste manual acumulado ────────────────────────────────
+    const manualAdj = debt.manualAdjust || 0;
+    const totalSpent = grandTotal + manualAdj;
+
+    // ── 3. Resumen KPI ────────────────────────────────────────────
+    const summaryEl = document.getElementById('debtAuditSummary');
+    summaryEl.innerHTML =
+      _auditKpi('Monto Original', formatCurrency(debt.amount), 'text-slate-300') +
+      _auditKpi('Pagado (etiqueta)', formatCurrency(grandTotal), 'text-amber-400') +
+      _auditKpi('Ajuste manual', formatCurrency(manualAdj), 'text-cyan-400') +
+      _auditKpi('Total pagado', formatCurrency(totalSpent), 'text-emerald-400') +
+      _auditKpi('Restante', formatCurrency(Math.max(0, debt.amount - totalSpent)), totalSpent >= debt.amount ? 'text-emerald-400' : 'text-rose-400') +
+      _auditKpi('Etiqueta vinculada', tag ? tag.name : '— Sin etiqueta —', tag ? 'text-cyan-300' : 'text-slate-600');
+
+    // ── 4. Advertencia de brecha ──────────────────────────────────
+    const warnEl = document.getElementById('debtAuditWarning');
+    const warnTxt = document.getElementById('debtAuditWarningText');
+    if (!tag) {
+      warnEl.classList.remove('hidden');
+      warnTxt.textContent = 'Esta deuda no tiene etiqueta vinculada. Ningun pago sera rastreado automaticamente. Editala y asignale una etiqueta.';
+    } else if (grandTotal === 0) {
+      warnEl.classList.remove('hidden');
+      warnTxt.textContent = 'No se encontro ninguna transaccion con la etiqueta "' + tag.name + '". Los pagos pueden estar registrados sin esa etiqueta, o la etiqueta no fue seleccionada al cargar los movimientos.';
+    } else {
+      warnEl.classList.add('hidden');
+    }
+
+    // ── 5. Transacciones no etiquetadas que podrían corresponder ──
+    const untaggedEl = document.getElementById('debtAuditUntagged');
+    const searchTerm = debt.name.toLowerCase().split(' ').filter(w => w.length > 3);
+    const candidates = [];
+    Object.entries(state.monthlyData).forEach(([key, ex]) => {
+      (ex.transactions || []).forEach(tx => {
+        if (tx.type === 'income') return;
+        if (debt.tagId && (tx.tags || []).includes(debt.tagId)) return; // ya contada
+        const desc = (tx.description || '').toLowerCase();
+        if (searchTerm.some(word => desc.includes(word))) {
+          candidates.push({ ...tx, _monthKey: key });
+        }
+      });
+    });
+
+    if (!candidates.length) {
+      untaggedEl.innerHTML = '<p class="text-slate-600 text-[10px] py-2 text-center">No se encontraron transacciones relacionadas sin etiqueta.</p>';
+    } else {
+      untaggedEl.innerHTML = candidates.map(tx =>
+        '<div class="flex items-center justify-between gap-2 px-2 py-1.5 rounded bg-amber-500/5 border border-amber-500/20">' +
+          '<div class="min-w-0">' +
+            '<span class="text-[10px] text-slate-400 font-mono">' + formatMonthLabel(tx._monthKey) + ' · ' + tx.date + '</span>' +
+            '<p class="text-xs text-slate-300 truncate">' + escapeHtml(tx.description) + '</p>' +
+          '</div>' +
+          '<span class="text-xs font-semibold font-mono text-amber-400 shrink-0">' + formatCurrency(tx.amount) + '</span>' +
+        '</div>'
+      ).join('');
+    }
+  }
+
+  function _auditKpi(label, value, colorClass) {
+    return '<div class="rounded-xl bg-slate-900/70 border border-slate-700/50 p-3">' +
+      '<p class="text-[10px] uppercase tracking-wide text-slate-500">' + label + '</p>' +
+      '<p class="mt-1 text-sm font-bold font-mono ' + colorClass + '">' + value + '</p>' +
+    '</div>';
+  }
+
+  function _toggleAuditMonthDetail(parentRow, txs, monthKey) {
+    const existingDetail = parentRow.nextSibling;
+    if (existingDetail && existingDetail.dataset && existingDetail.dataset.detail === monthKey) {
+      existingDetail.remove();
+      return;
+    }
+    // Eliminar detalle previo de otro mes si estaba abierto
+    const prev = parentRow.parentNode.querySelector('[data-detail]');
+    if (prev) prev.remove();
+
+    const detailRow = document.createElement('tr');
+    detailRow.dataset.detail = monthKey;
+    const tdHtml = txs.map(tx =>
+      '<div class="flex items-center justify-between gap-2 py-1">' +
+        '<div class="flex items-center gap-2 min-w-0">' +
+          '<span class="text-slate-500 font-mono text-[10px]">' + tx.date + '</span>' +
+          '<span class="text-slate-300 text-[11px] truncate">' + escapeHtml(tx.description) + '</span>' +
+        '</div>' +
+        '<span class="text-amber-400 font-semibold font-mono text-xs shrink-0">' + formatCurrency(tx.amount) + '</span>' +
+      '</div>'
+    ).join('');
+    detailRow.innerHTML = '<td colspan="4" class="px-6 py-2 bg-slate-900/80">' + tdHtml + '</td>';
+    parentRow.insertAdjacentElement('afterend', detailRow);
+  }
+
+  function applyDebtAuditAdjust() {
+    if (!_auditDebtId) return;
+    const debt = state.historicalDebts.find(d => d.id === _auditDebtId);
+    if (!debt) return;
+    const amount = parseFloat(document.getElementById('debtAuditAdjust').value) || 0;
+    const note   = document.getElementById('debtAuditAdjustNote').value.trim();
+    if (!amount || amount <= 0) {
+      document.getElementById('debtAuditAdjustFeedback').innerHTML = '<span class="text-rose-400">Ingresa un monto valido mayor a 0.</span>';
+      return;
+    }
+    if (!debt.manualAdjustLog) debt.manualAdjustLog = [];
+    debt.manualAdjust = (debt.manualAdjust || 0) + amount;
+    debt.manualAdjustLog.push({ amount, note: note || 'Ajuste manual', date: new Date().toISOString().split('T')[0] });
+    saveData();
+    document.getElementById('debtAuditAdjustFeedback').innerHTML =
+      '<span class="text-emerald-400"><i class="fa-solid fa-check mr-1"></i>Ajuste de ' + formatCurrency(amount) + ' aplicado correctamente.</span>';
+    document.getElementById('debtAuditAdjust').value = '';
+    document.getElementById('debtAuditAdjustNote').value = '';
+    _renderDebtAudit(debt);
+    refreshUI();
+  }
+
+  // ================================================================
+  // UTILIDADES GENERALES
+  // ================================================================
+  function initEventListeners() {
+    document.getElementById('transactionForm').addEventListener('submit', handleTransactionSubmit);
+    document.getElementById('commitmentForm').addEventListener('submit', handleCommitmentSubmit);
+    document.getElementById('incomeExpectedForm').addEventListener('submit', handleIncomeExpectedSubmit);
+    document.getElementById('debtForm').addEventListener('submit', handleDebtSubmit);
+    document.getElementById('searchInput').addEventListener('input', () => updateTransactionTable());
+  }
+
+  function setDefaultDates() {
+    const today = new Date().toISOString().split('T')[0];
+    ['date','comFecha','incFecha'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el && !el.value) el.value = today;
+    });
+  }
+
+  function escapeHtml(str) {
+    return String(str)
+      .replace(/&/g,'&amp;').replace(/</g,'&lt;')
+      .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+  function cryptoId() {
+    return (typeof crypto !== 'undefined' && crypto.randomUUID)
+      ? crypto.randomUUID()
+      : 'id-' + Date.now() + '-' + Math.random().toString(36).slice(2, 9);
+  }
+
+  // ================================================================
+  // MIGRACIÓN DE DATOS
+  // ================================================================
+  function openMigrationModal() {
+    document.getElementById('migrationModal').classList.replace('hidden', 'flex');
+  }
+
+  function closeMigrationModal() {
+    document.getElementById('migrationModal').classList.replace('flex', 'hidden');
+    ['autoDetectResult','manualKeyResult','jsonResult','backupFileResult'].forEach(id => {
+      const el = document.getElementById(id); if (el) el.innerHTML = '';
+    });
+    const bfi = document.getElementById('backupFileInput'); if (bfi) bfi.value = '';
+  }
+
+  function loadBackupFromFile(input) {
+    const resultDiv = document.getElementById('backupFileResult');
+    const file = input.files[0];
+    if (!file) { resultDiv.innerHTML = '<p class="text-amber-400">Selecciona un archivo</p>'; return; }
+    resultDiv.innerHTML = '<p class="text-slate-400">Leyendo archivo...</p>';
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      try {
+        importFullBackup(e.target.result);
+        resultDiv.innerHTML = '<p class="text-emerald-400"><i class="fa-solid fa-check mr-2"></i>Backup importado</p>';
+        setTimeout(() => closeMigrationModal(), 1500);
+      } catch (err) {
+        resultDiv.innerHTML = `<p class="text-rose-400"><i class="fa-solid fa-xmark mr-2"></i>Error: ${err.message}</p>`;
+      }
+    };
+    reader.onerror = () => { resultDiv.innerHTML = '<p class="text-rose-400">Error al leer el archivo</p>'; };
+    reader.readAsText(file);
+  }
+
+  function autoDetectData() {
+    const resultDiv = document.getElementById('autoDetectResult');
+    resultDiv.innerHTML = '<p class="text-slate-400">Buscando datos...</p>';
+    const ownKey = STORAGE_KEY;
+    const commonKeys = [
+      'ultimateDashboardTransactions_v1','ultimateDashboard_v2','ultimateDashboard_v3',
+      'presupuesto_state_v1','financialDashboard','transactions','budget_data','expenses_data'
+    ].filter(k => k !== ownKey);
+    const allStorageKeys = Object.keys(localStorage).filter(k => k !== ownKey && k !== 'ultimateDashboard_emergency_backup');
+    const keysToTry = [...new Set([...commonKeys, ...allStorageKeys])];
+    let found = false, totalImported = 0;
+
+    for (const key of keysToTry) {
+      try {
+        const data = localStorage.getItem(key);
+        if (!data) continue;
+        const parsed = JSON.parse(data);
+        let imported = 0;
+
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          imported = importTransactions(parsed);
+        } else if (parsed && typeof parsed === 'object') {
+          if (parsed.version && parsed.data && Array.isArray(parsed.data.transactions)) {
+            const d = parsed.data;
+            imported = importTransactions(d.data ? d.data.transactions : d.transactions);
+            const monthKey = imported > 0 ? inferMonthKey(d.transactions || []) : getCurrentMonthKey();
+            if (!state.monthlyData[monthKey]) createMonthExercise(monthKey);
+            if (d.commitments   && d.commitments.length)    d.commitments.forEach(c  => { if (!state.monthlyData[monthKey].commitments.find(x => x.id === c.id))    state.monthlyData[monthKey].commitments.push(c); });
+            if (d.incomeExpected && d.incomeExpected.length) d.incomeExpected.forEach(i => { if (!state.monthlyData[monthKey].incomeExpected.find(x => x.id === i.id)) state.monthlyData[monthKey].incomeExpected.push(i); });
+            if (d.historicalDebts && d.historicalDebts.length) state.historicalDebts = d.historicalDebts;
+            if (d.tags && d.tags.length) state.tags = d.tags;
+          } else if (Array.isArray(parsed.transactions) && parsed.transactions.length > 0) {
+            imported = importTransactions(parsed.transactions);
+            const monthKey = inferMonthKey(parsed.transactions);
+            if (!state.monthlyData[monthKey]) createMonthExercise(monthKey);
+            if (parsed.commitments    && parsed.commitments.length)    parsed.commitments.forEach(c    => { if (!state.monthlyData[monthKey].commitments.find(x => x.id === c.id))    state.monthlyData[monthKey].commitments.push(c); });
+            if (parsed.incomeExpected && parsed.incomeExpected.length) parsed.incomeExpected.forEach(i => { if (!state.monthlyData[monthKey].incomeExpected.find(x => x.id === i.id)) state.monthlyData[monthKey].incomeExpected.push(i); });
+            if (parsed.historicalDebts && parsed.historicalDebts.length) state.historicalDebts = parsed.historicalDebts;
+            if (parsed.tags && parsed.tags.length) state.tags = parsed.tags;
+          }
+        }
+
+        if (imported > 0) {
+          totalImported += imported;
+          found = true;
+          resultDiv.innerHTML += `<p class="text-emerald-400 mt-1"><i class="fa-solid fa-check mr-2"></i>En "<strong>${key}</strong>": ${imported} transacciones</p>`;
+        }
+      } catch(e) { /* clave inválida */ }
+    }
+
+    if (!found) {
+      resultDiv.innerHTML = '<p class="text-amber-400"><i class="fa-solid fa-exclamation-triangle mr-2"></i>No se encontraron datos. Usa la Opción 3 o 4.</p>';
+    } else {
+      resultDiv.innerHTML += `<p class="text-emerald-400 font-semibold mt-2">Total: ${totalImported} transacciones importadas</p>`;
+      const monthCounts = {};
+      Object.entries(state.monthlyData).forEach(([k, ex]) => { monthCounts[k] = (ex.transactions || []).length; });
+      const bestMonth = Object.keys(monthCounts).sort((a, b) => monthCounts[b] - monthCounts[a])[0];
+      if (bestMonth) state.activeMonth = bestMonth;
+      saveData(); destroyCharts(); renderMonthSelector(); refreshUI();
+      setTimeout(() => {
+        closeMigrationModal();
+        alert(`¡Éxito! ${totalImported} transacciones importadas.\nEjercicio activo: ${formatMonthLabel(state.activeMonth)}`);
+      }, 2000);
+    }
+  }
+
+  function loadFromManualKey() {
+    const key = document.getElementById('manualKey').value.trim();
+    const resultDiv = document.getElementById('manualKeyResult');
+    if (!key) { resultDiv.innerHTML = '<p class="text-rose-400">Ingresa una clave</p>'; return; }
+    try {
+      const data = localStorage.getItem(key);
+      if (!data) { resultDiv.innerHTML = `<p class="text-rose-400">No se encontró la clave "${key}"</p>`; return; }
+      importFullBackup(data);
+      resultDiv.innerHTML = '<p class="text-emerald-400"><i class="fa-solid fa-check mr-2"></i>Datos importados</p>';
+      setTimeout(() => closeMigrationModal(), 1500);
+    } catch(e) {
+      resultDiv.innerHTML = `<p class="text-rose-400">Error al parsear: ${e.message}</p>`;
+    }
+  }
+
+  function loadFromJSON() {
+    const json = document.getElementById('jsonInput').value.trim();
+    const resultDiv = document.getElementById('jsonResult');
+    if (!json) { resultDiv.innerHTML = '<p class="text-rose-400">Pega el JSON</p>'; return; }
+    try {
+      importFullBackup(json);
+      resultDiv.innerHTML = '<p class="text-emerald-400"><i class="fa-solid fa-check mr-2"></i>Datos importados</p>';
+      setTimeout(() => closeMigrationModal(), 1500);
+    } catch(e) {
+      resultDiv.innerHTML = `<p class="text-rose-400">JSON inválido: ${e.message}</p>`;
+    }
+  }
+
+  function importFullBackup(jsonString) {
+    try {
+      const backup = JSON.parse(jsonString);
+      let switchToMonth = null;
+
+      if (backup.monthlyData) {
+        state.monthlyData     = { ...state.monthlyData, ...backup.monthlyData };
+        state.historicalDebts = backup.historicalDebts || state.historicalDebts;
+        state.tags            = backup.tags            || state.tags;
+        state.sortConfig      = backup.sortConfig      || state.sortConfig;
+        switchToMonth = backup.activeMonth || Object.keys(backup.monthlyData).sort().pop();
+
+      } else if (backup.version && backup.data) {
+        const d = backup.data;
+        const txList = d.transactions || [];
+        if (txList.length) {
+          importTransactions(txList);
+          switchToMonth = inferMonthKey(txList);
+          const key = switchToMonth;
+          if (!state.monthlyData[key]) createMonthExercise(key);
+          if (d.commitments   && d.commitments.length)    state.monthlyData[key].commitments    = [...(state.monthlyData[key].commitments    || []), ...d.commitments];
+          if (d.incomeExpected && d.incomeExpected.length) state.monthlyData[key].incomeExpected = [...(state.monthlyData[key].incomeExpected || []), ...d.incomeExpected];
+        }
+        if (d.historicalDebts && d.historicalDebts.length) state.historicalDebts = d.historicalDebts;
+        if (d.tags            && d.tags.length)            state.tags            = d.tags;
+
+      } else if (backup.transactions && Array.isArray(backup.transactions) && backup.transactions.length) {
+        const txList = backup.transactions;
+        importTransactions(txList);
+        switchToMonth = inferMonthKey(txList);
+        const key = switchToMonth;
+        if (!state.monthlyData[key]) createMonthExercise(key);
+        if (backup.commitments   && backup.commitments.length)    state.monthlyData[key].commitments    = [...(state.monthlyData[key].commitments    || []), ...backup.commitments];
+        if (backup.incomeExpected && backup.incomeExpected.length) state.monthlyData[key].incomeExpected = [...(state.monthlyData[key].incomeExpected || []), ...backup.incomeExpected];
+        if (backup.historicalDebts && backup.historicalDebts.length) state.historicalDebts = backup.historicalDebts;
+        if (backup.tags            && backup.tags.length)            state.tags            = backup.tags;
+
+      } else if (Array.isArray(backup) && backup.length) {
+        importTransactions(backup);
+        switchToMonth = inferMonthKey(backup);
+
+      } else {
+        alert('Formato de backup no reconocido. Verifica el archivo.');
+        return;
+      }
+
+      if (switchToMonth && state.monthlyData[switchToMonth]) {
+        state.activeMonth = switchToMonth;
+      }
+      saveData(); destroyCharts(); renderMonthSelector(); refreshUI();
+      alert(`Backup importado correctamente.\nEjercicio activo: ${formatMonthLabel(state.activeMonth)}`);
+    } catch(e) {
+      alert('Error al importar el backup: ' + e.message);
+    }
+  }
+
+  function importTransactions(data) {
+    let imported = 0;
+    if (!Array.isArray(data)) return 0;
+    data.forEach(item => {
+      if (item && (item.amount || item.monto) && (item.description || item.descripcion)) {
+        const tx = {
+          id:          item.id || cryptoId(),
+          type:        item.type || item.tipo || 'variable',
+          description: item.description || item.descripcion || 'Sin descripción',
+          amount:      parseFloat(item.amount || item.monto || 0),
+          date:        item.date || item.fecha || new Date().toISOString().split('T')[0],
+          tags:        item.tags || []
+        };
+        if (tx.type === 'Ingreso'  || tx.type === 'ingreso')  tx.type = 'income';
+        if (tx.type === 'Gasto Fijo' || tx.type === 'gasto_fijo' || tx.type === 'fixed') tx.type = 'fixed';
+        if (tx.type === 'Gasto Variable' || tx.type === 'gasto_variable' || tx.type === 'variable') tx.type = 'variable';
+        const monthKey = tx.date.substring(0, 7);
+        if (!state.monthlyData[monthKey]) createMonthExercise(monthKey);
+        const ex = state.monthlyData[monthKey];
+        if (!ex.transactions.find(t => t.id === tx.id)) {
+          ex.transactions.push(tx);
+          imported++;
+        }
+      }
+    });
+    return imported;
+  }
+
+  function showAllKeys() {
+    const resultDiv = document.getElementById('allKeysResult');
+    const keys = Object.keys(localStorage);
+    if (!keys.length) { resultDiv.innerHTML = '<p class="text-slate-500">No hay claves en localStorage</p>'; return; }
+    let html = '<div class="space-y-1 bg-slate-950/80 rounded-xl p-2 mt-1">';
+    keys.forEach(key => {
+      try {
+        const value = localStorage.getItem(key);
+        const size  = new Blob([value]).size;
+        html += `<div class="flex items-center justify-between gap-2 text-slate-400 hover:bg-slate-800/60 p-1.5 rounded-lg cursor-pointer transition"
+                     onclick="document.getElementById('manualKey').value='${key}'">
+          <span class="truncate flex-1 font-mono text-[11px]">${key}</span>
+          <span class="text-slate-600 text-[10px] shrink-0">${(size/1024).toFixed(1)} KB</span>
+        </div>`;
+      } catch(e) { /* skip */ }
+    });
+    html += '</div><p class="text-slate-600 mt-1 text-[10px]">Click en una clave para usarla en Opción 3</p>';
+    resultDiv.innerHTML = html;
+  }
+</script>
+</body>
+</html>
