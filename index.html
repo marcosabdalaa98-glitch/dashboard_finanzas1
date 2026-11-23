@@ -1037,17 +1037,16 @@
 // ============================================================================
 // PERSISTENCIA
 // ============================================================================
+const FIREBASE_URL = 'https://dashboard-finanzas-2ea04-default-rtdb.firebaseio.com/dashboard.json';
+
 async function loadData() {
   try {
-    let stored = localStorage.getItem(STORAGE_KEY);
-    if (!stored) {
-      const resp = await fetch('./datos.json?v=' + Date.now());
-      if (resp.ok) {
-        stored = await resp.text();
-        localStorage.setItem(STORAGE_KEY, stored);
-      }
-    }
+    const resp = await fetch(FIREBASE_URL);
+    const data = resp.ok ? await resp.json() : null;
+    let stored = data && data.raw ? data.raw : localStorage.getItem(STORAGE_KEY);
+
     if (stored) {
+      localStorage.setItem(STORAGE_KEY, stored);
         const parsed = JSON.parse(stored);
         state.monthlyData     = parsed.monthlyData     || {};
         state.historicalDebts = parsed.historicalDebts || [];
