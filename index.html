@@ -1026,21 +1026,28 @@
   // ================================================================
   // INICIALIZACIÓN
   // ================================================================
-  document.addEventListener('DOMContentLoaded', () => {
-    loadData();
-    initEventListeners();
-    setDefaultDates();
-    renderMonthSelector();
-    refreshUI();
-  });
+ document.addEventListener('DOMContentLoaded', async () => {
+  await loadData();
+  initEventListeners();
+  setDefaultDates();
+  renderMonthSelector();
+  refreshUI();
+});
 
-  // ================================================================
-  // PERSISTENCIA
-  // ================================================================
-  function loadData() {
-    try {
-      const stored = localStorage.getItem(STORAGE_KEY);
-      if (stored) {
+// ============================================================================
+// PERSISTENCIA
+// ============================================================================
+async function loadData() {
+  try {
+    let stored = localStorage.getItem(STORAGE_KEY);
+    if (!stored) {
+      const resp = await fetch('./datos.json?v=' + Date.now());
+      if (resp.ok) {
+        stored = await resp.text();
+        localStorage.setItem(STORAGE_KEY, stored);
+      }
+    }
+    if (stored) {
         const parsed = JSON.parse(stored);
         state.monthlyData     = parsed.monthlyData     || {};
         state.historicalDebts = parsed.historicalDebts || [];
