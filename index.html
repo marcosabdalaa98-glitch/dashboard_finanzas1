@@ -1084,18 +1084,25 @@ async function loadData() {
   }
 
   function saveData() {
-    try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify({
-        activeMonth:     state.activeMonth,
-        monthlyData:     state.monthlyData,
-        historicalDebts: state.historicalDebts,
-        tags:            state.tags,
-        sortConfig:      state.sortConfig
-      }));
-    } catch (e) {
-      console.warn('Error al guardar:', e);
-    }
+  try {
+    const payload = JSON.stringify({
+      activeMonth:     state.activeMonth,
+      monthlyData:     state.monthlyData,
+      historicalDebts: state.historicalDebts,
+      tags:            state.tags,
+      sortConfig:      state.sortConfig
+    });
+    localStorage.setItem(STORAGE_KEY, payload);
+
+    fetch(FIREBASE_URL, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ raw: payload })
+    }).catch(err => console.error('Error sincronizando con Firebase:', err));
+  } catch (e) {
+    console.warn('Error al guardar datos:', e);
   }
+}
 
   // ================================================================
   // UTILIDADES DE FECHA Y MES
