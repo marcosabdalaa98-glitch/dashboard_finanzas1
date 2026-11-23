@@ -1026,12 +1026,29 @@
   // ================================================================
   // INICIALIZACIÓN
   // ================================================================
- document.addEventListener('DOMContentLoaded', async () => {
+let lastSyncedRaw = null;
+
+document.addEventListener('DOMContentLoaded', async () => {
   await loadData();
+  lastSyncedRaw = localStorage.getItem(STORAGE_KEY);
   initEventListeners();
   setDefaultDates();
   renderMonthSelector();
   refreshUI();
+
+  // Sincronización automática en tiempo real cada 10 segundos
+  setInterval(async () => {
+    try {
+      const resp = await fetch(FIREBASE_URL);
+      const data = resp.ok ? await resp.json() : null;
+      if (data && data.raw && data.raw !== lastSyncedRaw) {
+        lastSyncedRaw = data.raw;
+        await loadData();
+        renderMonthSelector();
+        refreshUI();
+      }
+    } catch (e) { /* reintenta en el próximo ciclo */ }
+  }, 10000);
 });
 
 // ============================================================================
